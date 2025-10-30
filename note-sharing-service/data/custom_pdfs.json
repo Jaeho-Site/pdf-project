@@ -1,4 +1,190 @@
 {
-  "custom_pdfs": []
+  "custom_pdfs": [
+    {
+      "student_id": "202300003",
+      "student_name": "이영희",
+      "course_id": "C001",
+      "week": 1,
+      "file_name": "이영희_나만의필기_데이터베이스_week1.pdf",
+      "file_path": "storage\\custom\\202300003\\CP001.pdf",
+      "page_selections": [
+        {
+          "page_num": 1,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 2,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 3,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 4,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 5,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 6,
+          "source_material_id": "M004",
+          "source_student_id": "202300003",
+          "source_student_name": "이영희"
+        },
+        {
+          "page_num": 7,
+          "source_material_id": "M004",
+          "source_student_id": "202300003",
+          "source_student_name": "이영희"
+        },
+        {
+          "page_num": 8,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 9,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 10,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 11,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 12,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 13,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 14,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 15,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 16,
+          "source_material_id": "M004",
+          "source_student_id": "202300003",
+          "source_student_name": "이영희"
+        }
+      ],
+      "custom_pdf_id": "CP001",
+      "created_at": "2025-10-30T20:47:57.056329"
+    },
+    {
+      "student_id": "202300003",
+      "student_name": "이영희",
+      "course_id": "C001",
+      "week": 1,
+      "file_name": "이영희_나만의필기_데이터베이스_week1.pdf",
+      "file_path": "storage\\custom\\202300003\\CP002.pdf",
+      "page_selections": [
+        {
+          "page_num": 1,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 1,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 2,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 3,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 4,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 4,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 5,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 5,
+          "source_material_id": "M002",
+          "source_student_id": "202300001",
+          "source_student_name": "홍길동"
+        },
+        {
+          "page_num": 6,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 7,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        },
+        {
+          "page_num": 8,
+          "source_material_id": "M003",
+          "source_student_id": "202300002",
+          "source_student_name": "김철수"
+        }
+      ],
+      "custom_pdf_id": "CP002",
+      "created_at": "2025-10-30T20:48:54.807468"
+    }
+  ]
 }
-

@@ -25,6 +25,34 @@
       "page_count": 16,
       "material_id": "M002",
       "upload_date": "2025-10-30T20:44:11.687064",
+      "download_count": 1,
+      "view_count": 0
+    },
+    {
+      "course_id": "C001",
+      "week": 1,
+      "uploader_id": "202300002",
+      "uploader_name": "김철수",
+      "is_professor_material": false,
+      "file_name": "1_-_chul.pdf",
+      "file_path": "storage\\students\\202300002\\C001\\week_1\\1_-_chul.pdf",
+      "page_count": 16,
+      "material_id": "M003",
+      "upload_date": "2025-10-30T20:45:32.828053",
+      "download_count": 0,
+      "view_count": 0
+    },
+    {
+      "course_id": "C001",
+      "week": 1,
+      "uploader_id": "202300003",
+      "uploader_name": "이영희",
+      "is_professor_material": false,
+      "file_name": "1_-_yung.pdf",
+      "file_path": "storage\\students\\202300003\\C001\\week_1\\1_-_yung.pdf",
+      "page_count": 16,
+      "material_id": "M004",
+      "upload_date": "2025-10-30T20:46:13.025311",
       "download_count": 0,
       "view_count": 0
     }
