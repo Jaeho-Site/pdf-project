@@ -24,6 +24,15 @@ def login():
         session['role'] = user['role']
         session['email'] = user['email']
         
+        print("=" * 70)
+        print(f"[LOGIN] 로그인 성공!")
+        print(f"  - 이메일: {email}")
+        print(f"  - 사용자: {user['name']} ({user['role']})")
+        print(f"  - User ID: {user['user_id']}")
+        print(f"  - Session ID: {session.get('_id', 'N/A')}")
+        print(f"  - 세션 저장: user_id={session['user_id']}, role={session['role']}")
+        print("=" * 70)
+        
         # 비밀번호 제외하고 반환
         user_data = {k: v for k, v in user.items() if k != 'password'}
         

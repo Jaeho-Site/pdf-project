@@ -1,4 +1,32 @@
 {
-  "materials": []
+  "materials": [
+    {
+      "course_id": "C001",
+      "week": 1,
+      "uploader_id": "P001",
+      "uploader_name": "김교수",
+      "is_professor_material": true,
+      "file_name": "1.pdf",
+      "file_path": "storage\\professor\\C001\\week_1\\1.pdf",
+      "page_count": 16,
+      "material_id": "M001",
+      "upload_date": "2025-10-30T20:43:14.321197",
+      "download_count": 0,
+      "view_count": 1
+    },
+    {
+      "course_id": "C001",
+      "week": 1,
+      "uploader_id": "202300001",
+      "uploader_name": "홍길동",
+      "is_professor_material": false,
+      "file_name": "1_-_hong.pdf",
+      "file_path": "storage\\students\\202300001\\C001\\week_1\\1_-_hong.pdf",
+      "page_count": 16,
+      "material_id": "M002",
+      "upload_date": "2025-10-30T20:44:11.687064",
+      "download_count": 0,
+      "view_count": 0
+    }
+  ]
 }
-

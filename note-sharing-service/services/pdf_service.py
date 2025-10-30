@@ -11,10 +11,11 @@ from typing import List, Dict, Optional
 class PDFService:
     """PDF 처리 서비스"""
     
-    def __init__(self, storage_dir='storage'):
+    def __init__(self, storage_dir='storage', poppler_path=None):
         self.storage_dir = storage_dir
         self.thumbnail_dir = os.path.join(storage_dir, 'thumbnails')
         self.temp_dir = os.path.join(storage_dir, 'temp')
+        self.poppler_path = poppler_path  # Poppler 경로 (선택적)
     
     def get_page_count(self, pdf_path: str) -> int:
         """PDF 페이지 수 조회"""
@@ -55,8 +56,29 @@ class PDFService:
         os.makedirs(thumbnail_folder, exist_ok=True)
         
         try:
+            # Poppler 경로 자동 감지 또는 사용자 지정
+            poppler_kwargs = {}
+            if self.poppler_path:
+                poppler_kwargs['poppler_path'] = self.poppler_path
+                print(f"  [Poppler] 사용자 지정 경로: {self.poppler_path}")
+            else:
+                # Windows에서 일반적인 Poppler 경로들 시도
+                possible_paths = [
+                    r"C:\poppler-25.07.0\Library\bin",  # 사용자 시스템 경로
+                    r"C:\poppler\Library\bin",
+                    r"C:\Program Files\poppler\bin",
+                    r"C:\poppler-0.68.0\bin",
+                    os.path.join(os.environ.get('LOCALAPPDATA', ''), 'poppler', 'bin'),
+                ]
+                
+                for path in possible_paths:
+                    if os.path.exists(path) and os.path.exists(os.path.join(path, 'pdftoppm.exe')):
+                        poppler_kwargs['poppler_path'] = path
+                        print(f"  [Poppler] 자동 감지 경로: {path}")
+                        break
+            
             # PDF → 이미지 변환
-            images = convert_from_path(pdf_path, dpi=dpi)
+            images = convert_from_path(pdf_path, dpi=dpi, **poppler_kwargs)
             
             image_paths = []
             for i, image in enumerate(images, start=1):
@@ -67,7 +89,21 @@ class PDFService:
             return image_paths
         
         except Exception as e:
-            print(f"PDF → 이미지 변환 오류: {e}")
+            error_msg = str(e)
+            print(f"  ❌ PDF → 이미지 변환 오류: {error_msg}")
+            
+            # Poppler 관련 오류인지 확인
+            if 'poppler' in error_msg.lower() or 'pdftoppm' in error_msg.lower():
+                print("\n" + "=" * 70)
+                print("⚠️  Poppler가 설치되지 않았거나 PATH에 등록되지 않았습니다!")
+                print("=" * 70)
+                print("\n📖 해결 방법:")
+                print("1. INSTALL_POPPLER.md 파일을 참조하세요")
+                print("2. 또는 관리자 권한 CMD에서 실행:")
+                print("   choco install poppler -y")
+                print("\n또는 pdf_service.py에서 poppler_path를 직접 지정하세요.")
+                print("=" * 70 + "\n")
+            
             return []
     
     def get_thumbnail_paths(self, material_id: str) -> List[str]:
@@ -186,4 +222,3 @@ class PDFService:
         except Exception as e:
             print(f"페이지 추출 오류: {e}")
             return False
-

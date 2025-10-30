@@ -16,10 +16,11 @@ class Config:
     SECRET_KEY = 'dev-secret-key-change-in-production'
     DEBUG = True
     
-    # 세션 설정 (CORS를 위해)
-    SESSION_COOKIE_SAMESITE = 'None'
-    SESSION_COOKIE_SECURE = False  # 개발 환경에서는 False, 프로덕션에서는 True
+    # 세션 설정 (개발 환경: localhost)
+    SESSION_COOKIE_SAMESITE = 'Lax'  # 개발 환경: Lax, 프로덕션: None + Secure=True
+    SESSION_COOKIE_SECURE = False  # HTTP에서는 False
     SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_DOMAIN = None  # localhost에서 작동하도록
     
     # 파일 업로드 설정
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
