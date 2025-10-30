@@ -1,0 +1,55 @@
+.page-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.notifications-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.notification-item {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.notification-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification-item.unread {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-message {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.notification-time {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.notification-badge {
+  background-color: #2196f3;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 1rem;
+}
+
