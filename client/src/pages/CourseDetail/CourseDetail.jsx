@@ -18,7 +18,7 @@ const CourseDetail = () => {
 
   const fetchCourseDetail = async () => {
     try {
-      const response = await api.get(`/courses/${courseId}`);
+      const response = await api.get(`/api/courses/${courseId}`);
       setCourse(response.data.course);
       setWeeksData(response.data.weeks_data || []);
     } catch (error) {

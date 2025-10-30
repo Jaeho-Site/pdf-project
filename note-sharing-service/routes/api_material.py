@@ -19,7 +19,7 @@ def require_login():
         return False
     return True
 
-@api_material_bp.route('/<course_id>/week/<int:week>/upload', methods=['POST'])
+@api_material_bp.route('/courses/<course_id>/week/<int:week>/upload', methods=['POST'])
 def upload_material(course_id, week):
     """자료 업로드"""
     if not require_login():
@@ -87,7 +87,7 @@ def upload_material(course_id, week):
         'material_id': material_id
     }), 201
 
-@api_material_bp.route('/<material_id>/download', methods=['GET'])
+@api_material_bp.route('/materials/<material_id>/download', methods=['GET'])
 def download_material(material_id):
     """자료 다운로드"""
     if not require_login():
@@ -107,7 +107,7 @@ def download_material(material_id):
     
     return send_file(file_path, as_attachment=True, download_name=material['file_name'])
 
-@api_material_bp.route('/<material_id>/view', methods=['GET'])
+@api_material_bp.route('/materials/<material_id>/view', methods=['GET'])
 def view_material(material_id):
     """자료 보기"""
     if not require_login():
@@ -126,4 +126,3 @@ def view_material(material_id):
         return jsonify({'success': False, 'message': '파일을 찾을 수 없습니다.'}), 404
     
     return send_file(file_path, mimetype='application/pdf')
-

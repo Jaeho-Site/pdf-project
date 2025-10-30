@@ -13,7 +13,7 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get('/notifications');
+      const response = await api.get('/api/notifications');
       setNotifications(response.data.notifications || []);
     } catch (error) {
       console.error('알림 조회 실패:', error);
@@ -24,7 +24,7 @@ const Notifications = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await api.post(`/notifications/${notificationId}/read`);
+      await api.post(`/api/notifications/${notificationId}/read`);
       showToast('읽음 처리되었습니다.', 'success');
       fetchNotifications();
     } catch (error) {

@@ -15,7 +15,7 @@ const MyCustomPDFs = () => {
 
   const fetchCustomPdfs = async () => {
     try {
-      const response = await api.get('/custom-pdfs/my-list');
+      const response = await api.get('/api/custom-pdfs/my-list');
       setCustomPdfs(response.data.custom_pdfs || []);
     } catch (error) {
       console.error('나만의 PDF 조회 실패:', error);
@@ -26,7 +26,7 @@ const MyCustomPDFs = () => {
 
   const handleDownload = async (customPdfId, fileName) => {
     try {
-      const response = await api.get(`/custom-pdfs/${customPdfId}/download`, {
+      const response = await api.get(`/api/custom-pdfs/${customPdfId}/download`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

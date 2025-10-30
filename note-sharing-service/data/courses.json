@@ -7,7 +7,11 @@
       "professor_name": "김교수",
       "year": 2025,
       "semester": 1,
-      "enrolled_students": ["202300001", "202300002", "202300003"],
+      "enrolled_students": [
+        "202300001",
+        "202300002",
+        "202300003"
+      ],
       "created_at": "2025-02-01T00:00:00"
     },
     {
@@ -17,7 +21,10 @@
       "professor_name": "이교수",
       "year": 2025,
       "semester": 1,
-      "enrolled_students": ["202300001", "202300003"],
+      "enrolled_students": [
+        "202300001",
+        "202300003"
+      ],
       "created_at": "2025-02-01T00:00:00"
     },
     {
@@ -27,9 +34,20 @@
       "professor_name": "김교수",
       "year": 2024,
       "semester": 2,
-      "enrolled_students": ["202300002"],
+      "enrolled_students": [
+        "202300002"
+      ],
       "created_at": "2024-09-01T00:00:00"
+    },
+    {
+      "course_name": "심화프로젝트랩",
+      "professor_id": "P001",
+      "professor_name": "김교수",
+      "year": 2025,
+      "semester": 2,
+      "enrolled_students": [],
+      "course_id": "C004",
+      "created_at": "2025-10-30T18:54:03.305311"
     }
   ]
 }
-

@@ -16,7 +16,7 @@ const Main = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await api.get('/courses');
+      const response = await api.get('/api/courses');
       setCourses(response.data.courses || []);
     } catch (error) {
       console.error('강의 목록 조회 실패:', error);

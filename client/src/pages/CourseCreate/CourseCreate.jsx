@@ -26,7 +26,7 @@ const CourseCreate = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/courses/create', formData);
+      const response = await api.post('/api/courses/create', formData);
       showToast(`강의 "${formData.course_name}"이(가) 생성되었습니다.`, 'success');
       navigate(`/courses/${response.data.course_id}`);
     } catch (error) {

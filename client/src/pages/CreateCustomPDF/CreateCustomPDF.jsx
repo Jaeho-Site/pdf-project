@@ -20,7 +20,7 @@ const CreateCustomPDF = () => {
 
   const fetchMaterials = async () => {
     try {
-      const response = await api.get(`/courses/${courseId}/week/${week}/create-custom`);
+      const response = await api.get(`/api/courses/${courseId}/week/${week}/create-custom`);
       setCourse(response.data.course);
       setMaterials(response.data.materials || []);
     } catch (error) {
@@ -66,7 +66,7 @@ const CreateCustomPDF = () => {
 
     try {
       const response = await api.post(
-        `/courses/${courseId}/week/${week}/generate-custom`,
+        `/api/courses/${courseId}/week/${week}/generate-custom`,
         { selected_pages: selectedPages }
       );
 

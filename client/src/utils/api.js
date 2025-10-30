@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '',  // 프록시 사용하므로 빈 문자열
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,  // 세션 쿠키 전송
 });
 
 // 요청 인터셉터

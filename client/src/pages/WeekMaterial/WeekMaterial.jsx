@@ -22,7 +22,7 @@ const WeekMaterial = () => {
 
   const fetchMaterials = async () => {
     try {
-      const response = await api.get(`/courses/${courseId}/week/${week}?sort=${sortBy}`);
+      const response = await api.get(`/api/courses/${courseId}/week/${week}?sort=${sortBy}`);
       setCourse(response.data.course);
       setProfessorMaterials(response.data.professor_materials || []);
       setStudentMaterials(response.data.student_materials || []);
@@ -44,7 +44,7 @@ const WeekMaterial = () => {
     formData.append('file', uploadFile);
 
     try {
-      await api.post(`/courses/${courseId}/week/${week}/upload`, formData, {
+      await api.post(`/api/courses/${courseId}/week/${week}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       showToast('업로드 완료!', 'success');
@@ -59,7 +59,7 @@ const WeekMaterial = () => {
 
   const handleDownload = async (materialId, fileName) => {
     try {
-      const response = await api.get(`/materials/${materialId}/download`, {
+      const response = await api.get(`/api/materials/${materialId}/download`, {
         responseType: 'blob'
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));

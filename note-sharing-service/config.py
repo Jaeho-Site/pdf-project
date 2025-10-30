@@ -16,6 +16,11 @@ class Config:
     SECRET_KEY = 'dev-secret-key-change-in-production'
     DEBUG = True
     
+    # 세션 설정 (CORS를 위해)
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SECURE = False  # 개발 환경에서는 False, 프로덕션에서는 True
+    SESSION_COOKIE_HTTPONLY = True
+    
     # 파일 업로드 설정
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
     ALLOWED_EXTENSIONS = {'pdf'}
@@ -35,4 +40,3 @@ class Config:
         os.makedirs(os.path.join(Config.STORAGE_DIR, 'custom'), exist_ok=True)
         os.makedirs(os.path.join(Config.STORAGE_DIR, 'thumbnails'), exist_ok=True)
         os.makedirs(os.path.join(Config.STORAGE_DIR, 'temp'), exist_ok=True)
-
