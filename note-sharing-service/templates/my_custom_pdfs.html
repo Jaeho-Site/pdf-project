@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}나만의 필기 만들기 - 필기자료 공유 서비스{% endblock %}
+
+{% block extra_style %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .custom-pdfs-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .custom-pdf-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: all 0.2s;
+    }
+
+    .custom-pdf-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .pdf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .pdf-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .pdf-meta {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .page-selections {
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .page-selections-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+    .page-selection-item {
+        font-size: 0.9rem;
+        color: #666;
+        padding: 0.25rem 0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">✨ 나만의 필기 만들기</div>
+    <div style="opacity: 0.9;">내가 만든 커스텀 PDF 목록</div>
+</div>
+
+{% if custom_pdfs %}
+<div class="custom-pdfs-list">
+    {% for pdf in custom_pdfs %}
+    <div class="custom-pdf-card">
+        <div class="pdf-header">
+            <div style="flex: 1;">
+                <div class="pdf-title">{{ pdf.file_name }}</div>
+                <div class="pdf-meta">
+                    📚 {{ pdf.course_name }} - {{ pdf.week }}주차 | 
+                    📅 {{ pdf.created_at|datetime }}
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('custom_pdf.download', custom_pdf_id=pdf.custom_pdf_id) }}" 
+                   class="btn btn-primary">다운로드</a>
+            </div>
+        </div>
+
+        <div class="page-selections">
+            <div class="page-selections-title">
+                📄 선택한 페이지 ({{ pdf.page_selections|length }}개)
+            </div>
+            <div style="max-height: 150px; overflow-y: auto;">
+                {% for selection in pdf.page_selections %}
+                <div class="page-selection-item">
+                    {{ loop.index }}. {{ selection.source_student_name }}님의 {{ selection.page_num }}페이지
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📚</div>
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+        아직 만든 나만의 필기가 없습니다.
+    </p>
+    <p>
+        강의 자료실에서 여러 학생들의 필기를 조합하여<br>
+        나만의 완벽한 필기 자료를 만들어보세요!
+    </p>
+    <p style="margin-top: 2rem;">
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">강의 목록으로 이동</a>
+    </p>
+</div>
+{% endif %}
+{% endblock %}
+

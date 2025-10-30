@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# Storage (실제 업로드된 파일들)
+storage/professor/*
+storage/students/*
+storage/custom/*
+storage/thumbnails/*
+storage/temp/*
+
+# 폴더는 유지하되 내용만 제외
+!storage/professor/.gitkeep
+!storage/students/.gitkeep
+!storage/custom/.gitkeep
+!storage/thumbnails/.gitkeep
+!storage/temp/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+

@@ -1,0 +1,35 @@
+{
+  "courses": [
+    {
+      "course_id": "C001",
+      "course_name": "데이터베이스",
+      "professor_id": "P001",
+      "professor_name": "김교수",
+      "year": 2025,
+      "semester": 1,
+      "enrolled_students": ["202300001", "202300002", "202300003"],
+      "created_at": "2025-02-01T00:00:00"
+    },
+    {
+      "course_id": "C002",
+      "course_name": "알고리즘",
+      "professor_id": "P002",
+      "professor_name": "이교수",
+      "year": 2025,
+      "semester": 1,
+      "enrolled_students": ["202300001", "202300003"],
+      "created_at": "2025-02-01T00:00:00"
+    },
+    {
+      "course_id": "C003",
+      "course_name": "운영체제",
+      "professor_id": "P001",
+      "professor_name": "김교수",
+      "year": 2024,
+      "semester": 2,
+      "enrolled_students": ["202300002"],
+      "created_at": "2024-09-01T00:00:00"
+    }
+  ]
+}
+

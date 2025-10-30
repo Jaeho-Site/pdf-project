@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}메인 - 필기자료 공유 서비스{% endblock %}
+
+{% block extra_style %}
+<style>
+    .welcome-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .welcome-section h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-section p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .course-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .course-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .course-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .course-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .course-semester {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .course-professor {
+        color: #1976d2;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>안녕하세요, {{ session.name }}님! 👋</h1>
+    <p>{{ '강의를 관리하고 학습 자료를 공유하세요.' if session.role == 'professor' else '강의 자료를 확인하고 나만의 필기를 만들어보세요.' }}</p>
+</div>
+
+<div class="section-header">
+    <h2 class="section-title">
+        {{ '담당 강의' if session.role == 'professor' else '수강 강의' }}
+    </h2>
+    {% if session.role == 'professor' %}
+    <a href="{{ url_for('course.create') }}" class="btn btn-primary">+ 자료실 생성</a>
+    {% endif %}
+</div>
+
+{% if courses %}
+<div class="courses-grid">
+    {% for course in courses %}
+    <div class="course-card" onclick="location.href='{{ url_for('course.detail', course_id=course.course_id) }}'">
+        <div class="course-header">
+            <div>
+                <div class="course-title">{{ course.course_name }}</div>
+                <div class="course-semester">{{ course.year }}년 {{ course.semester }}학기</div>
+                {% if session.role == 'student' %}
+                <div class="course-professor">👨‍🏫 {{ course.professor_name }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.9rem;">
+            {% if session.role == 'professor' %}
+            수강생: {{ course.enrolled_students|length }}명
+            {% else %}
+            강의실 입장 →
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📚</div>
+    <p>{{ '담당하는 강의가 없습니다.' if session.role == 'professor' else '수강 중인 강의가 없습니다.' }}</p>
+    {% if session.role == 'professor' %}
+    <p style="margin-top: 1rem;">
+        <a href="{{ url_for('course.create') }}" class="btn btn-primary">자료실 생성하기</a>
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+

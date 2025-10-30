@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}알림 - 필기자료 공유 서비스{% endblock %}
+
+{% block extra_style %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .notifications-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .notification-item {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+    .notification-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .notification-item.unread {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-message {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .notification-time {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .notification-badge {
+        background-color: #2196f3;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">🔔 알림</h1>
+</div>
+
+{% if notifications %}
+<div class="notifications-list">
+    {% for notification in notifications %}
+    <div class="notification-item {{ 'unread' if not notification.is_read }}">
+        <div class="notification-content">
+            <div class="notification-message">
+                {% if not notification.is_read %}
+                <span class="notification-badge">NEW</span>
+                {% endif %}
+                {{ notification.message }}
+            </div>
+            <div class="notification-time">
+                {{ notification.created_at|datetime }}
+            </div>
+        </div>
+        
+        {% if not notification.is_read %}
+        <form method="POST" action="{{ url_for('main.mark_notification_read', notification_id=notification.notification_id) }}" 
+              style="display: inline;">
+            <button type="submit" class="btn btn-secondary" style="font-size: 0.9rem;">읽음 처리</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">🔔</div>
+    <p style="font-size: 1.1rem;">알림이 없습니다.</p>
+</div>
+{% endif %}
+{% endblock %}
+

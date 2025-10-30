@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.course_name }} {{ week }}주차 - 필기자료 공유 서비스{% endblock %}
+
+{% block extra_style %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .breadcrumb {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb a {
+        color: #1976d2;
+        text-decoration: none;
+    }
+
+    .section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .upload-area {
+        background-color: #f5f5f5;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .materials-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .material-item {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .material-info {
+        flex: 1;
+    }
+
+    .material-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .material-meta {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .material-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
+
+    .filter-bar select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="breadcrumb">
+            <a href="{{ url_for('main.index') }}">홈</a> &gt; 
+            <a href="{{ url_for('course.detail', course_id=course.course_id) }}">{{ course.course_name }}</a> &gt; 
+            {{ week }}주차
+        </div>
+        <h1>{{ week }}주차 자료</h1>
+    </div>
+</div>
+
+<!-- 업로드 영역 -->
+<div class="upload-area">
+    <form method="POST" action="{{ url_for('material.upload', course_id=course.course_id, week=week) }}" 
+          enctype="multipart/form-data">
+        <p style="margin-bottom: 1rem;">📤 PDF 파일 업로드</p>
+        <input type="file" name="file" accept=".pdf" required style="margin-bottom: 1rem;">
+        <br>
+        <button type="submit" class="btn btn-primary">업로드</button>
+    </form>
+</div>
+
+<!-- 교수 자료 -->
+<div class="section">
+    <div class="section-title">📄 교수 자료</div>
+    {% if professor_materials %}
+    <div class="materials-list">
+        {% for material in professor_materials %}
+        <div class="material-item">
+            <div class="material-info">
+                <div class="material-name">{{ material.file_name }}</div>
+                <div class="material-meta">
+                    {{ material.uploader_name }} | 
+                    {{ material.upload_date|datetime }} | 
+                    페이지: {{ material.page_count }} | 
+                    다운로드: {{ material.download_count }}
+                </div>
+            </div>
+            <div class="material-actions">
+                <a href="{{ url_for('material.view', material_id=material.material_id) }}" 
+                   class="btn btn-secondary" target="_blank">보기</a>
+                <a href="{{ url_for('material.download', material_id=material.material_id) }}" 
+                   class="btn btn-primary">다운로드</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #999; text-align: center; padding: 2rem;">업로드된 교수 자료가 없습니다.</p>
+    {% endif %}
+</div>
+
+<!-- 학생 필기 -->
+<div class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div class="section-title">📝 학생 필기</div>
+        {% if session.role == 'student' and student_materials %}
+        <a href="{{ url_for('custom_pdf.create_page', course_id=course.course_id, week=week) }}" 
+           class="btn btn-success">✨ 나만의 필기 만들기</a>
+        {% endif %}
+    </div>
+
+    {% if student_materials %}
+    <!-- 정렬 필터 -->
+    <div class="filter-bar">
+        <label>정렬:</label>
+        <select onchange="location.href='?sort=' + this.value">
+            <option value="latest" {{ 'selected' if sort_by == 'latest' }}>최신순</option>
+            <option value="name" {{ 'selected' if sort_by == 'name' }}>이름순</option>
+            <option value="popular" {{ 'selected' if sort_by == 'popular' }}>인기순</option>
+            <option value="downloads" {{ 'selected' if sort_by == 'downloads' }}>다운로드순</option>
+        </select>
+    </div>
+
+    <div class="materials-list">
+        {% for material in student_materials %}
+        <div class="material-item">
+            <div class="material-info">
+                <div class="material-name">{{ material.file_name }}</div>
+                <div class="material-meta">
+                    {{ material.uploader_name }} | 
+                    {{ material.upload_date|datetime }} | 
+                    페이지: {{ material.page_count }} | 
+                    👁️ {{ material.view_count }} | 
+                    ⬇️ {{ material.download_count }}
+                </div>
+            </div>
+            <div class="material-actions">
+                <a href="{{ url_for('material.view', material_id=material.material_id) }}" 
+                   class="btn btn-secondary" target="_blank">보기</a>
+                <a href="{{ url_for('material.download', material_id=material.material_id) }}" 
+                   class="btn btn-primary">다운로드</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #999; text-align: center; padding: 2rem;">
+        업로드된 학생 필기가 없습니다.<br>
+        {% if session.role == 'student' %}
+        첫 번째로 필기를 공유해보세요!
+        {% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+

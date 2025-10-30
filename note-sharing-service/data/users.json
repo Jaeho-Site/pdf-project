@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "user_id": "P001",
+      "role": "professor",
+      "name": "김교수",
+      "email": "kim.prof@university.ac.kr",
+      "password": "prof1234",
+      "department": "컴퓨터공학과",
+      "profile_image": null,
+      "created_at": "2025-01-01T00:00:00"
+    },
+    {
+      "user_id": "P002",
+      "role": "professor",
+      "name": "이교수",
+      "email": "lee.prof@university.ac.kr",
+      "password": "prof5678",
+      "department": "소프트웨어학과",
+      "profile_image": null,
+      "created_at": "2025-01-01T00:00:00"
+    },
+    {
+      "user_id": "202300001",
+      "role": "student",
+      "name": "홍길동",
+      "email": "hong@student.ac.kr",
+      "password": "student1",
+      "student_id": "202300001",
+      "department": "컴퓨터공학과",
+      "profile_image": null,
+      "created_at": "2025-01-01T00:00:00"
+    },
+    {
+      "user_id": "202300002",
+      "role": "student",
+      "name": "김철수",
+      "email": "kim@student.ac.kr",
+      "password": "student2",
+      "student_id": "202300002",
+      "department": "컴퓨터공학과",
+      "profile_image": null,
+      "created_at": "2025-01-01T00:00:00"
+    },
+    {
+      "user_id": "202300003",
+      "role": "student",
+      "name": "이영희",
+      "email": "lee@student.ac.kr",
+      "password": "student3",
+      "student_id": "202300003",
+      "department": "소프트웨어학과",
+      "profile_image": null,
+      "created_at": "2025-01-01T00:00:00"
+    }
+  ]
+}
+

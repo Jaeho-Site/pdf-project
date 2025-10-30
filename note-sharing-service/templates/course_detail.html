@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.course_name }} - 필기자료 공유 서비스{% endblock %}
+
+{% block extra_style %}
+<style>
+    .course-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .course-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .course-info {
+        opacity: 0.9;
+    }
+
+    .weeks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .week-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .week-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .week-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .week-stats {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.8;
+    }
+
+    .week-stats div {
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="course-header">
+    <div class="course-title">{{ course.course_name }}</div>
+    <div class="course-info">
+        {{ course.year }}년 {{ course.semester }}학기 | 
+        {% if session.role == 'professor' %}
+        수강생 {{ course.enrolled_students|length }}명
+        {% else %}
+        {{ course.professor_name }} 교수님
+        {% endif %}
+    </div>
+</div>
+
+<h2 style="margin-bottom: 1.5rem; color: #333;">주차별 자료</h2>
+
+<div class="weeks-grid">
+    {% for week_data in weeks_data %}
+    <div class="week-card" onclick="location.href='{{ url_for('course.week_materials', course_id=course.course_id, week=week_data.week) }}'">
+        <div class="week-title">{{ week_data.week }}주차</div>
+        <div class="week-stats">
+            <div>
+                <span>📄 교수 자료:</span>
+                <strong>{{ week_data.professor_count }}</strong>
+            </div>
+            <div>
+                <span>📝 학생 필기:</span>
+                <strong>{{ week_data.student_count }}</strong>
+            </div>
+            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #eee;">
+                <span>👁️ 조회:</span>
+                <strong>{{ week_data.total_views }}</strong>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

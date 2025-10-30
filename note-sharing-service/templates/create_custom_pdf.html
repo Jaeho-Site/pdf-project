@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}나만의 필기 만들기 - {{ course.course_name }} {{ week }}주차{% endblock %}
+
+{% block extra_style %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        opacity: 0.9;
+    }
+
+    .instructions {
+        background-color: #fffbea;
+        border-left: 4px solid #f59e0b;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+    }
+
+    .matrix-container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        overflow-x: auto;
+        margin-bottom: 2rem;
+    }
+
+    .page-matrix {
+        display: table;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .matrix-row {
+        display: table-row;
+    }
+
+    .matrix-cell {
+        display: table-cell;
+        padding: 1rem;
+        border: 1px solid #eee;
+        text-align: center;
+        vertical-align: top;
+    }
+
+    .matrix-header {
+        background-color: #f5f5f5;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .student-name-cell {
+        background-color: #f9f9f9;
+        font-weight: 600;
+        min-width: 150px;
+        text-align: left;
+        padding-left: 1.5rem;
+    }
+
+    .page-preview {
+        position: relative;
+        width: 120px;
+        margin: 0 auto;
+    }
+
+    .page-image {
+        width: 100%;
+        height: auto;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .page-image:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .page-checkbox {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+    }
+
+    .page-number {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .selected {
+        border-color: #4caf50;
+        box-shadow: 0 0 0 2px #4caf50;
+    }
+
+    .action-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: white;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        z-index: 100;
+    }
+
+    .selected-count {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 90%;
+    }
+
+    .modal-content img {
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 8px;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-title">✨ 나만의 필기 만들기</div>
+    <div class="page-subtitle">
+        {{ course.course_name }} - {{ week }}주차 | 
+        마음에 드는 페이지를 선택하여 조합하세요
+    </div>
+</div>
+
+<div class="instructions">
+    <strong>📌 사용방법:</strong><br>
+    1. 각 학생의 필기에서 원하는 페이지를 클릭하여 선택하세요.<br>
+    2. 선택한 페이지는 선택 순서대로 하나의 PDF로 합쳐집니다.<br>
+    3. 이미지를 클릭하면 크게 미리볼 수 있습니다.
+</div>
+
+<div class="matrix-container">
+    <div class="page-matrix">
+        <!-- 헤더 행 -->
+        <div class="matrix-row">
+            <div class="matrix-cell matrix-header student-name-cell">학생</div>
+            {% for i in range(1, (materials[0].page_count if materials else 0) + 1) %}
+            <div class="matrix-cell matrix-header">페이지 {{ i }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- 각 학생별 행 -->
+        {% for material in materials %}
+        <div class="matrix-row">
+            <div class="matrix-cell student-name-cell">
+                {{ material.uploader_name }}<br>
+                <span style="font-size: 0.85rem; color: #666;">
+                    ({{ material.uploader_id }})
+                </span>
+            </div>
+            
+            {% for page_num in range(1, material.page_count + 1) %}
+            <div class="matrix-cell">
+                <div class="page-preview" 
+                     data-material-id="{{ material.material_id }}"
+                     data-page-num="{{ page_num }}"
+                     data-student-name="{{ material.uploader_name }}">
+                    <input type="checkbox" class="page-checkbox" 
+                           id="page_{{ material.material_id }}_{{ page_num }}">
+                    <img src="{{ url_for('static', filename='../storage/thumbnails/' + material.material_id + '/page_' + page_num|string + '.jpg') }}" 
+                         alt="Page {{ page_num }}"
+                         class="page-image"
+                         onclick="showImageModal(this.src)">
+                    <div class="page-number">{{ page_num }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 하단 액션 바 -->
+<div class="action-bar">
+    <div class="selected-count">
+        선택된 페이지: <span id="selected-count">0</span>개
+    </div>
+    <button class="btn btn-secondary" onclick="clearSelection()">선택 초기화</button>
+    <button class="btn btn-success" onclick="generatePDF()">📄 나만의 PDF 생성</button>
+    <a href="{{ url_for('course.week_materials', course_id=course.course_id, week=week) }}" 
+       class="btn btn-secondary">취소</a>
+</div>
+
+<!-- 이미지 모달 -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="modal-close">&times;</span>
+    <div class="modal-content">
+        <img id="modalImage" src="">
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    let selectedPages = [];
+
+    // 페이지 체크박스 이벤트
+    document.querySelectorAll('.page-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const preview = this.parentElement;
+            const materialId = preview.dataset.materialId;
+            const pageNum = parseInt(preview.dataset.pageNum);
+            const studentName = preview.dataset.studentName;
+            const image = preview.querySelector('.page-image');
+
+            if (this.checked) {
+                // 선택
+                selectedPages.push({
+                    material_id: materialId,
+                    page_num: pageNum,
+                    student_name: studentName
+                });
+                image.classList.add('selected');
+            } else {
+                // 선택 해제
+                selectedPages = selectedPages.filter(p => 
+                    !(p.material_id === materialId && p.page_num === pageNum)
+                );
+                image.classList.remove('selected');
+            }
+
+            updateSelectedCount();
+        });
+    });
+
+    // 이미지 클릭 시 체크박스 토글
+    document.querySelectorAll('.page-image').forEach(img => {
+        img.addEventListener('click', function(e) {
+            e.stopPropagation(); // 모달 방지
+            const checkbox = this.parentElement.querySelector('.page-checkbox');
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+        });
+    });
+
+    function updateSelectedCount() {
+        document.getElementById('selected-count').textContent = selectedPages.length;
+    }
+
+    function clearSelection() {
+        selectedPages = [];
+        document.querySelectorAll('.page-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        document.querySelectorAll('.page-image').forEach(img => {
+            img.classList.remove('selected');
+        });
+        updateSelectedCount();
+    }
+
+    function generatePDF() {
+        if (selectedPages.length === 0) {
+            alert('페이지를 하나 이상 선택해주세요!');
+            return;
+        }
+
+        if (!confirm(`선택한 ${selectedPages.length}개의 페이지로 PDF를 생성하시겠습니까?`)) {
+            return;
+        }
+
+        // 로딩 표시
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '생성 중...';
+
+        // API 호출
+        fetch('{{ url_for("custom_pdf.generate", course_id=course.course_id, week=week) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                selected_pages: selectedPages
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '📄 나만의 PDF 생성';
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                window.location.href = '{{ url_for("custom_pdf.my_list") }}';
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            btn.disabled = false;
+            btn.textContent = '📄 나만의 PDF 생성';
+            alert('오류가 발생했습니다: ' + error);
+            console.error('Error:', error);
+        });
+    }
+
+    function showImageModal(src) {
+        document.getElementById('modalImage').src = src;
+        document.getElementById('imageModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+</script>
+{% endblock %}
+
