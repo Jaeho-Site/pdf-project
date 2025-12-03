@@ -14,6 +14,7 @@ const CreateCustomPDF = () => {
   const [modalImage, setModalImage] = useState('');
   const [generating, setGenerating] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
 
   useEffect(() => {
     fetchMaterials();
@@ -114,14 +115,33 @@ const CreateCustomPDF = () => {
   const goToPreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
+      setCurrentStudentIndex(0);
     }
   };
 
   const goToNextPage = () => {
     if (currentPage < maxPages) {
       setCurrentPage(currentPage + 1);
+      setCurrentStudentIndex(0);
     }
   };
+
+  // 학생 슬라이더 네비게이션
+  const goToPreviousStudent = () => {
+    if (currentStudentIndex > 0) {
+      setCurrentStudentIndex(currentStudentIndex - 1);
+    }
+  };
+
+  const goToNextStudent = () => {
+    if (currentStudentIndex < materials.length - 1) {
+      setCurrentStudentIndex(currentStudentIndex + 1);
+    }
+  };
+
+  const currentMaterial = materials[currentStudentIndex];
+  const hasPage = currentMaterial && currentPage <= currentMaterial.page_count;
+  const isSelected = hasPage && isPageSelected(currentMaterial.material_id, currentPage);
 
   return (
     <div>
@@ -163,62 +183,81 @@ const CreateCustomPDF = () => {
         </button>
       </div>
 
-      {/* 현재 페이지의 모든 학생 필기 표시 */}
-      <div className="carousel-container">
-        <div className="students-grid">
-          {materials.map((material) => {
-            const hasPage = currentPage <= material.page_count;
-            const isSelected = isPageSelected(material.material_id, currentPage);
+      {/* 수평 슬라이더 */}
+      <div className="slider-container">
+        <button
+          className="slider-nav-btn slider-nav-left"
+          onClick={goToPreviousStudent}
+          disabled={currentStudentIndex === 0}
+        >
+          ‹
+        </button>
 
-            return (
-              <div key={material.material_id} className="student-card">
-                <div className="student-info">
-                  <div className="student-name">{material.uploader_name}</div>
-                  <div className="student-id">({material.uploader_id})</div>
+        <div className="slider-content">
+          {currentMaterial && (
+            <div className="student-slide">
+              {hasPage ? (
+                <div
+                  className={`page-preview-slider ${isSelected ? 'selected' : ''}`}
+                  onClick={() =>
+                    handlePageToggle(
+                      currentMaterial.material_id,
+                      currentPage,
+                      currentMaterial.uploader_name
+                    )
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    className="page-checkbox-slider"
+                    checked={isSelected}
+                    onChange={() => {}}
+                  />
+                  <img
+                    src={`/api/storage/thumbnails/${currentMaterial.material_id}/page_${currentPage}.jpg`}
+                    alt={`Page ${currentPage}`}
+                    className="page-image-slider"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      showImageModal(e.target.src);
+                    }}
+                  />
+                  {isSelected && (
+                    <div className="selection-badge-slider">
+                      ✓ 선택됨 (순서: {selectedPages.findIndex(
+                        p => p.material_id === currentMaterial.material_id && p.page_num === currentPage
+                      ) + 1})
+                    </div>
+                  )}
                 </div>
-                {hasPage ? (
-                  <div
-                    className={`page-preview-large ${isSelected ? 'selected' : ''}`}
-                    onClick={() =>
-                      handlePageToggle(
-                        material.material_id,
-                        currentPage,
-                        material.uploader_name
-                      )
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      className="page-checkbox-large"
-                      checked={isSelected}
-                      onChange={() => {}}
-                    />
-                    <img
-                      src={`/api/storage/thumbnails/${material.material_id}/page_${currentPage}.jpg`}
-                      alt={`Page ${currentPage}`}
-                      className="page-image-large"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showImageModal(e.target.src);
-                      }}
-                    />
-                    {isSelected && (
-                      <div className="selection-badge">
-                        선택됨 (순서: {selectedPages.findIndex(
-                          p => p.material_id === material.material_id && p.page_num === currentPage
-                        ) + 1})
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="no-page">
-                    <p>이 학생은 {currentPage}페이지가 없습니다</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              ) : (
+                <div className="no-page-slider">
+                  <p>이 학생은 {currentPage}페이지가 없습니다</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        <button
+          className="slider-nav-btn slider-nav-right"
+          onClick={goToNextStudent}
+          disabled={currentStudentIndex === materials.length - 1}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* 학생 인디케이터 도트 */}
+      <div className="student-indicators">
+        {materials.map((material, index) => (
+          <button
+            key={material.material_id}
+            className={`indicator-dot ${index === currentStudentIndex ? 'active' : ''}`}
+            onClick={() => setCurrentStudentIndex(index)}
+            title={material.uploader_name}
+          />
+        ))}
       </div>
 
       {/* 하단 액션 바 */}
