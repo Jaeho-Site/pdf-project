@@ -184,3 +184,162 @@
   color: #ccc;
 }
 
+/* 페이지 네비게이션 */
+.page-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-nav {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #667eea;
+  background-color: white;
+  color: #667eea;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-nav:hover:not(:disabled) {
+  background-color: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 1.2rem;
+  color: #333;
+  min-width: 150px;
+  text-align: center;
+}
+
+/* 캐러셀 컨테이너 */
+.carousel-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 8rem;
+}
+
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.student-card {
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.student-info {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.student-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.student-id {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.page-preview-large {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.page-preview-large:hover {
+  transform: scale(1.02);
+}
+
+.page-preview-large.selected .page-image-large {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 4px #4caf50, 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.page-image-large {
+  width: 100%;
+  height: auto;
+  border: 3px solid #ddd;
+  border-radius: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-image-large:hover {
+  border-color: #1976d2;
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
+}
+
+.page-checkbox-large {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  z-index: 2;
+  accent-color: #4caf50;
+}
+
+.selection-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4caf50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.no-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  color: #999;
+  font-style: italic;
+}
+

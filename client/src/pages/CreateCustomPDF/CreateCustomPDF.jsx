@@ -13,6 +13,7 @@ const CreateCustomPDF = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalImage, setModalImage] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchMaterials();
@@ -109,6 +110,19 @@ const CreateCustomPDF = () => {
   // 최대 페이지 수 계산
   const maxPages = Math.max(...materials.map((m) => m.page_count));
 
+  // 페이지 네비게이션
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < maxPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div>
       <div className="page-header-custom">
@@ -128,71 +142,83 @@ const CreateCustomPDF = () => {
         3. 이미지를 클릭하면 크게 미리볼 수 있습니다.
       </div>
 
-      <div className="matrix-container">
-        <table className="page-matrix">
-          <thead>
-            <tr>
-              <th className="student-name-cell">학생</th>
-              {Array.from({ length: maxPages }, (_, i) => (
-                <th key={i}>페이지 {i + 1}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {materials.map((material) => (
-              <tr key={material.material_id}>
-                <td className="student-name-cell">
-                  {material.uploader_name}
-                  <br />
-                  <span style={{ fontSize: '0.85rem', color: '#666' }}>
-                    ({material.uploader_id})
-                  </span>
-                </td>
-                {Array.from({ length: maxPages }, (_, pageIndex) => {
-                  const pageNum = pageIndex + 1;
-                  const hasPage = pageNum <= material.page_count;
-                  const isSelected = isPageSelected(material.material_id, pageNum);
+      {/* 페이지 네비게이션 */}
+      <div className="page-navigation">
+        <button
+          className="btn btn-nav"
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+        >
+          ← 이전 페이지
+        </button>
+        <div className="page-indicator">
+          <strong>페이지 {currentPage}</strong> / {maxPages}
+        </div>
+        <button
+          className="btn btn-nav"
+          onClick={goToNextPage}
+          disabled={currentPage === maxPages}
+        >
+          다음 페이지 →
+        </button>
+      </div>
 
-                  return (
-                    <td key={pageNum}>
-                      {hasPage ? (
-                        <div
-                          className={`page-preview ${isSelected ? 'selected' : ''}`}
-                          onClick={() =>
-                            handlePageToggle(
-                              material.material_id,
-                              pageNum,
-                              material.uploader_name
-                            )
-                          }
-                        >
-                          <input
-                            type="checkbox"
-                            className="page-checkbox"
-                            checked={isSelected}
-                            onChange={() => {}}
-                          />
-                          <img
-                            src={`/api/storage/thumbnails/${material.material_id}/page_${pageNum}.jpg`}
-                            alt={`Page ${pageNum}`}
-                            className="page-image"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              showImageModal(e.target.src);
-                            }}
-                          />
-                          <div className="page-number">{pageNum}</div>
-                        </div>
-                      ) : (
-                        <div style={{ color: '#ccc', textAlign: 'center' }}>-</div>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* 현재 페이지의 모든 학생 필기 표시 */}
+      <div className="carousel-container">
+        <div className="students-grid">
+          {materials.map((material) => {
+            const hasPage = currentPage <= material.page_count;
+            const isSelected = isPageSelected(material.material_id, currentPage);
+
+            return (
+              <div key={material.material_id} className="student-card">
+                <div className="student-info">
+                  <div className="student-name">{material.uploader_name}</div>
+                  <div className="student-id">({material.uploader_id})</div>
+                </div>
+                {hasPage ? (
+                  <div
+                    className={`page-preview-large ${isSelected ? 'selected' : ''}`}
+                    onClick={() =>
+                      handlePageToggle(
+                        material.material_id,
+                        currentPage,
+                        material.uploader_name
+                      )
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      className="page-checkbox-large"
+                      checked={isSelected}
+                      onChange={() => {}}
+                    />
+                    <img
+                      src={`/api/storage/thumbnails/${material.material_id}/page_${currentPage}.jpg`}
+                      alt={`Page ${currentPage}`}
+                      className="page-image-large"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showImageModal(e.target.src);
+                      }}
+                    />
+                    {isSelected && (
+                      <div className="selection-badge">
+                        선택됨 (순서: {selectedPages.findIndex(
+                          p => p.material_id === material.material_id && p.page_num === currentPage
+                        ) + 1})
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="no-page">
+                    <p>이 학생은 {currentPage}페이지가 없습니다</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* 하단 액션 바 */}
