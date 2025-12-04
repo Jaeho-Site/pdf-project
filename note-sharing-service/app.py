@@ -5,6 +5,7 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from config import Config
+from services.evaluation_scheduler import EvaluationScheduler
 import os
 
 def create_app():
@@ -28,12 +29,14 @@ def create_app():
     from routes.api_material import api_material_bp
     from routes.api_custom_pdf import api_custom_pdf_bp
     from routes.api_notification import api_notification_bp
+    from routes.api_evaluation import api_evaluation_bp
     
     app.register_blueprint(api_auth_bp, url_prefix='/api/auth')
     app.register_blueprint(api_course_bp, url_prefix='/api/courses')
     app.register_blueprint(api_material_bp, url_prefix='/api')  # /api/courses와 /api/materials 통합
     app.register_blueprint(api_custom_pdf_bp, url_prefix='/api')
     app.register_blueprint(api_notification_bp, url_prefix='/api/notifications')
+    app.register_blueprint(api_evaluation_bp, url_prefix='/api')
     
     # 정적 파일 서빙 (썸네일 이미지)
     @app.route('/api/storage/<path:filename>')
@@ -47,6 +50,23 @@ def create_app():
     def health_check():
         """API 서버 상태 확인"""
         return {'status': 'ok', 'message': 'API server is running'}, 200
+    
+    # 평가 스케줄러 초기화 (Gemini API 키가 있는 경우만)
+    # 주의: 스케줄러는 앱 컨텍스트 외부에서도 작동하도록 전역 변수로 저장
+    gemini_api_key = os.getenv('GEMINI_API_KEY')
+    if gemini_api_key:
+        try:
+            app.config['EVALUATION_SCHEDULER'] = EvaluationScheduler(gemini_api_key=gemini_api_key)
+            app.config['EVALUATION_SCHEDULER'].start(check_interval_minutes=60)  # 1시간마다 체크
+            print("✅ 평가 스케줄러가 시작되었습니다.")
+        except Exception as e:
+            print(f"⚠️  평가 스케줄러 시작 실패: {e}")
+            print("   GEMINI_API_KEY 환경변수를 확인하세요.")
+            app.config['EVALUATION_SCHEDULER'] = None
+    else:
+        print("⚠️  GEMINI_API_KEY가 설정되지 않아 평가 스케줄러를 시작하지 않습니다.")
+        print("   필기 평가 기능을 사용하려면 .env 파일에 GEMINI_API_KEY를 설정하세요.")
+        app.config['EVALUATION_SCHEDULER'] = None
     
     # 404 에러 핸들러
     @app.errorhandler(404)

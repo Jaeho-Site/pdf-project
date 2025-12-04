@@ -27,7 +27,14 @@ const CreateCustomPDF = () => {
       setMaterials(response.data.materials || []);
     } catch (error) {
       console.error('자료 조회 실패:', error);
-      showToast('자료를 불러올 수 없습니다.', 'danger');
+      const errorMessage = error.response?.data?.message || '자료를 불러올 수 없습니다.';
+      showToast(errorMessage, 'danger');
+      if (error.response?.status === 403) {
+        // 마감일이 지나지 않았으면 이전 페이지로
+        setTimeout(() => {
+          navigate(`/courses/${courseId}/week/${week}`);
+        }, 2000);
+      }
     }
   };
 
@@ -160,6 +167,8 @@ const CreateCustomPDF = () => {
         2. 선택한 페이지는 선택 순서대로 하나의 PDF로 합쳐집니다.
         <br />
         3. 이미지를 클릭하면 크게 미리볼 수 있습니다.
+        <br />
+        4. ⭐ 점수가 높은 필기가 먼저 표시됩니다.
       </div>
 
       {/* 페이지 네비게이션 */}
@@ -196,6 +205,28 @@ const CreateCustomPDF = () => {
         <div className="slider-content">
           {currentMaterial && (
             <div className="student-slide">
+              <div style={{ 
+                marginBottom: '0.5rem', 
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '1.1rem'
+              }}>
+                {currentMaterial.uploader_name}
+                {currentMaterial.quality_score !== null && currentMaterial.quality_score !== undefined && (
+                  <span style={{
+                    marginLeft: '0.5rem',
+                    backgroundColor: currentMaterial.quality_score >= 8 ? '#4caf50' : 
+                                   currentMaterial.quality_score >= 6 ? '#ff9800' : '#f44336',
+                    color: 'white',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold'
+                  }}>
+                    ⭐ {currentMaterial.quality_score.toFixed(1)}
+                  </span>
+                )}
+              </div>
               {hasPage ? (
                 <div
                   className={`page-preview-slider ${isSelected ? 'selected' : ''}`}

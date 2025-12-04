@@ -97,10 +97,114 @@ class DataService:
         course['course_id'] = f"C{course_count + 1:03d}"
         course['created_at'] = datetime.now().isoformat()
         
+        # weeks 필드 초기화 (없으면)
+        if 'weeks' not in course:
+            course['weeks'] = {}
+        
         data['courses'].append(course)
         self._save_json('courses', data)
         
         return course['course_id']
+    
+    def set_week_deadline(self, course_id: str, week: int, deadline: str):
+        """주차별 업로드 마감일 설정"""
+        data = self._load_json('courses')
+        
+        for course in data['courses']:
+            if course['course_id'] == course_id:
+                if 'weeks' not in course:
+                    course['weeks'] = {}
+                
+                week_str = str(week)
+                if week_str not in course['weeks']:
+                    course['weeks'][week_str] = {}
+                
+                course['weeks'][week_str]['upload_deadline'] = deadline
+                course['weeks'][week_str]['evaluation_status'] = 'pending'
+                break
+        
+        self._save_json('courses', data)
+    
+    def get_week_deadline(self, course_id: str, week: int) -> Optional[str]:
+        """주차별 업로드 마감일 조회"""
+        course = self.get_course_by_id(course_id)
+        if not course:
+            return None
+        
+        weeks_config = course.get('weeks', {})
+        week_str = str(week)
+        
+        if week_str in weeks_config:
+            return weeks_config[week_str].get('upload_deadline')
+        
+        return None
+    
+    def _parse_datetime(self, date_str: str) -> datetime:
+        """ISO 형식 날짜 문자열을 datetime으로 변환 (Z 처리 포함)"""
+        if not date_str:
+            return None
+        
+        # Z를 제거하고 처리
+        date_str_clean = date_str.replace('Z', '')
+        
+        try:
+            # ISO 형식 파싱 시도
+            return datetime.fromisoformat(date_str_clean)
+        except ValueError:
+            # 밀리초가 있는 경우 처리
+            try:
+                # .000 형식 제거 후 시도
+                if '.' in date_str_clean:
+                    date_str_no_ms = date_str_clean.split('.')[0]
+                    return datetime.fromisoformat(date_str_no_ms)
+                return datetime.fromisoformat(date_str_clean)
+            except ValueError:
+                # dateutil parser 사용 (없으면 기본 파싱)
+                try:
+                    from dateutil import parser
+                    return parser.parse(date_str)
+                except:
+                    # 마지막 시도: 수동 파싱
+                    try:
+                        return datetime.strptime(date_str_clean, '%Y-%m-%dT%H:%M:%S')
+                    except:
+                        return datetime.strptime(date_str_clean, '%Y-%m-%dT%H:%M:%S.%f')
+    
+    def is_upload_period_open(self, course_id: str, week: int) -> bool:
+        """업로드 기간이 열려있는지 확인"""
+        deadline = self.get_week_deadline(course_id, week)
+        
+        if not deadline:
+            # 마감일이 설정되지 않았으면 항상 열림
+            return True
+        
+        try:
+            deadline_dt = self._parse_datetime(deadline)
+            if deadline_dt is None:
+                return True
+            return datetime.now() < deadline_dt
+        except Exception as e:
+            print(f"[ERROR] 마감일 파싱 오류: {deadline}, {e}")
+            # 오류 발생 시 안전하게 True 반환 (업로드 가능)
+            return True
+    
+    def can_view_materials(self, course_id: str, week: int) -> bool:
+        """자료 열람 가능 여부 (마감일이 지났는지)"""
+        deadline = self.get_week_deadline(course_id, week)
+        
+        if not deadline:
+            # 마감일이 설정되지 않았으면 항상 열람 가능
+            return True
+        
+        try:
+            deadline_dt = self._parse_datetime(deadline)
+            if deadline_dt is None:
+                return True
+            return datetime.now() >= deadline_dt
+        except Exception as e:
+            print(f"[ERROR] 마감일 파싱 오류: {deadline}, {e}")
+            # 오류 발생 시 안전하게 True 반환 (열람 가능)
+            return True
     
     # ===== 자료 관련 =====
     def get_materials_by_course_week(self, course_id: str, week: int) -> List[Dict]:

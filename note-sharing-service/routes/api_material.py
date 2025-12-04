@@ -46,6 +46,16 @@ def upload_material(course_id, week):
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
+    # 학생 업로드인 경우 마감일 체크
+    if role == 'student':
+        if not data_service.is_upload_period_open(course_id, week):
+            deadline = data_service.get_week_deadline(course_id, week)
+            deadline_str = deadline[:10] if deadline else "알 수 없음"
+            return jsonify({
+                'success': False, 
+                'message': f'업로드 기간이 종료되었습니다. (마감일: {deadline_str})'
+            }), 403
+    
     if 'file' not in request.files:
         return jsonify({'success': False, 'message': '파일을 선택해주세요.'}), 400
     

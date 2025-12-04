@@ -26,7 +26,7 @@
       "material_id": "M002",
       "upload_date": "2025-10-30T20:44:11.687064",
       "download_count": 1,
-      "view_count": 0
+      "view_count": 1
     },
     {
       "course_id": "C001",
@@ -54,7 +54,105 @@
       "material_id": "M004",
       "upload_date": "2025-10-30T20:46:13.025311",
       "download_count": 0,
+      "view_count": 1
+    },
+    {
+      "course_id": "C001",
+      "week": 2,
+      "uploader_id": "P001",
+      "uploader_name": "김교수",
+      "is_professor_material": true,
+      "file_name": "2.pdf",
+      "file_path": "storage\\professor\\C001\\week_2\\2.pdf",
+      "page_count": 31,
+      "material_id": "M005",
+      "upload_date": "2025-11-02T18:11:29.357746",
+      "download_count": 1,
+      "view_count": 1
+    },
+    {
+      "course_id": "C005",
+      "week": 1,
+      "uploader_id": "P001",
+      "uploader_name": "김교수",
+      "is_professor_material": true,
+      "file_name": "2.pdf",
+      "file_path": "storage\\professor\\C005\\week_1\\2.pdf",
+      "page_count": 31,
+      "material_id": "M006",
+      "upload_date": "2025-11-02T19:06:12.082452",
+      "download_count": 0,
       "view_count": 0
+    },
+    {
+      "course_id": "C001",
+      "week": 2,
+      "uploader_id": "202300001",
+      "uploader_name": "홍길동",
+      "is_professor_material": false,
+      "file_name": "1_-_hong.pdf",
+      "file_path": "storage\\students\\202300001\\C001\\week_2\\1_-_hong.pdf",
+      "page_count": 16,
+      "material_id": "M007",
+      "upload_date": "2025-11-02T19:07:17.541105",
+      "download_count": 1,
+      "view_count": 1
+    },
+    {
+      "course_id": "C001",
+      "week": 1,
+      "uploader_id": "202300001",
+      "uploader_name": "홍길동",
+      "is_professor_material": false,
+      "file_name": "M13_CNN.pdf",
+      "file_path": "storage\\students\\202300001\\C001\\week_1\\M13_CNN.pdf",
+      "page_count": 12,
+      "material_id": "M008",
+      "upload_date": "2025-12-04T01:38:29.945784",
+      "download_count": 0,
+      "view_count": 0
+    },
+    {
+      "course_id": "C006",
+      "week": 2,
+      "uploader_id": "P002",
+      "uploader_name": "이교수",
+      "is_professor_material": true,
+      "file_name": "M13_CNN.pdf",
+      "file_path": "storage\\professor\\C006\\week_2\\M13_CNN.pdf",
+      "page_count": 12,
+      "material_id": "M009",
+      "upload_date": "2025-12-04T10:21:03.833902",
+      "download_count": 0,
+      "view_count": 0
+    },
+    {
+      "course_id": "C006",
+      "week": 3,
+      "uploader_id": "P002",
+      "uploader_name": "이교수",
+      "is_professor_material": true,
+      "file_name": "M13_CNN.pdf",
+      "file_path": "storage\\professor\\C006\\week_3\\M13_CNN.pdf",
+      "page_count": 12,
+      "material_id": "M010",
+      "upload_date": "2025-12-04T10:36:58.129477",
+      "download_count": 0,
+      "view_count": 0
+    },
+    {
+      "course_id": "C006",
+      "week": 2,
+      "uploader_id": "202300003",
+      "uploader_name": "이영희",
+      "is_professor_material": false,
+      "file_name": "13-1-nodejs-chat-14p.pdf",
+      "file_path": "storage\\students\\202300003\\C006\\week_2\\13-1-nodejs-chat-14p.pdf",
+      "page_count": 16,
+      "material_id": "M011",
+      "upload_date": "2025-12-04T10:37:40.155183",
+      "download_count": 0,
+      "view_count": 1
     }
   ]
 }
