@@ -18,7 +18,7 @@ def create_app():
     CORS(app, 
          supports_credentials=True, 
          origins=['http://localhost:3000', 'http://localhost:5173','https://pdf-project-seven.vercel.app'],
-         allow_headers=['Content-Type', 'Authorization'],
+         allow_headers=['Content-Type', 'Authorization', 'X-User-ID', 'X-User-Role', 'X-User-Email'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     
     # 설정 초기화
@@ -31,6 +31,7 @@ def create_app():
     from routes.api_custom_pdf import api_custom_pdf_bp
     from routes.api_notification import api_notification_bp
     from routes.api_evaluation import api_evaluation_bp
+    from routes.api_admin import api_admin_bp
     
     app.register_blueprint(api_auth_bp, url_prefix='/api/auth')
     app.register_blueprint(api_course_bp, url_prefix='/api/courses')
@@ -38,6 +39,7 @@ def create_app():
     app.register_blueprint(api_custom_pdf_bp, url_prefix='/api')
     app.register_blueprint(api_notification_bp, url_prefix='/api/notifications')
     app.register_blueprint(api_evaluation_bp, url_prefix='/api')
+    app.register_blueprint(api_admin_bp, url_prefix='/api/admin')
     
     # 헬스 체크
     @app.route('/api/health')

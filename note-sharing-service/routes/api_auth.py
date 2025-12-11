@@ -143,3 +143,79 @@ def get_current_user():
             'success': False,
             'message': '사용자를 찾을 수 없습니다.'
         }), 404
+
+@api_auth_bp.route('/init-demo-users', methods=['POST'])
+def init_demo_users():
+    """데모 사용자 생성 - 초기 설정용"""
+    try:
+        # 교수가 있는지 확인
+        professor = db.get_user_by_email('kim.prof@university.ac.kr')
+        if professor:
+            existing_users = db.get_all_users()
+            return jsonify({
+                'success': True,
+                'message': f'이미 {len(existing_users)}명의 사용자가 존재합니다. (교수 포함)',
+                'user_count': len(existing_users)
+            }), 200
+        
+        # 테스트 사용자 생성
+        test_users = [
+            # 교수
+            {
+                'email': 'kim.prof@university.ac.kr',
+                'password': 'prof1234',
+                'name': '김교수',
+                'role': 'professor'
+            },
+            {
+                'email': 'lee.prof@university.ac.kr',
+                'password': 'prof5678',
+                'name': '이교수',
+                'role': 'professor'
+            },
+            # 학생
+            {
+                'email': 'hong@student.ac.kr',
+                'password': 'student1',
+                'name': '홍길동',
+                'role': 'student'
+            },
+            {
+                'email': 'kim@student.ac.kr',
+                'password': 'student2',
+                'name': '김철수',
+                'role': 'student'
+            },
+            {
+                'email': 'lee@student.ac.kr',
+                'password': 'student3',
+                'name': '이영희',
+                'role': 'student'
+            }
+        ]
+        
+        created_users = []
+        for user_data in test_users:
+            try:
+                user_id = db.create_user(user_data)
+                created_users.append({
+                    'user_id': user_id,
+                    'email': user_data['email'],
+                    'name': user_data['name'],
+                    'role': user_data['role']
+                })
+            except ValueError as e:
+                # 이미 존재하는 경우 무시
+                pass
+        
+        return jsonify({
+            'success': True,
+            'message': f'{len(created_users)}명의 테스트 사용자가 생성되었습니다.',
+            'users': created_users
+        }), 201
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'사용자 생성 실패: {str(e)}'
+        }), 500

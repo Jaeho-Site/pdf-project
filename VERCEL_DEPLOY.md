@@ -40,7 +40,10 @@ git push origin main
 **Environment Variables** 추가:
 
 - Name: `VITE_API_URL`
-- Value: `http://VM외부IP:5000` (예: `http://34.64.123.45:5000`)
+- Value: `https://your-backend-url.com` ⚠️ **HTTPS 필수!**
+
+> 🚨 **중요**: Vercel은 HTTPS이므로 백엔드도 HTTPS여야 합니다.  
+> Mixed Content 에러 발생 시 `HTTPS_SETUP.md` 참고
 
 6. **Deploy** 클릭
 
