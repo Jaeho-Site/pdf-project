@@ -318,15 +318,13 @@ def get_invitation_info(invitation_code):
 @api_course_bp.route('/invite/<invitation_code>/join', methods=['POST'])
 def join_course_by_invitation(invitation_code):
     """초대 링크로 강의 참가"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth(required_role='student')
+    if auth_result:
+        return auth_result
     
-    if session.get('role') != 'student':
-        return jsonify({'success': False, 'message': '학생만 강의에 참가할 수 있습니다.'}), 403
+    user_id = request.headers.get('X-User-ID')
     
-    student_id = session['user_id']
-    
-    if db.use_invitation(invitation_code, student_id):
+    if db.use_invitation(invitation_code, user_id):
         invitation = db.get_invitation(invitation_code)
         course = db.get_course_by_id(invitation['course_id'])
         
@@ -344,17 +342,17 @@ def join_course_by_invitation(invitation_code):
 @api_course_bp.route('/<course_id>/week/<int:week>/deadline', methods=['POST'])
 def set_week_deadline(course_id, week):
     """주차별 업로드 마감일 설정 (교수만)"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth(required_role='professor')
+    if auth_result:
+        return auth_result
     
-    if session.get('role') != 'professor':
-        return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
+    user_id = request.headers.get('X-User-ID')
     
     course = db.get_course_by_id(course_id)
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
-    if course['professor_id'] != session['user_id']:
+    if course['professor_id'] != user_id:
         return jsonify({'success': False, 'message': '본인의 강의만 수정할 수 있습니다.'}), 403
     
     data = request.get_json()
@@ -374,11 +372,9 @@ def set_week_deadline(course_id, week):
 @api_course_bp.route('/<course_id>/week/<int:week>/create-custom', methods=['GET'])
 def get_custom_pdf_materials(course_id, week):
     """나만의 PDF 제작용 자료 조회"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
-    
-    if session.get('role') != 'student':
-        return jsonify({'success': False, 'message': '학생만 접근할 수 있습니다.'}), 403
+    auth_result = check_auth(required_role='student')
+    if auth_result:
+        return auth_result
     
     course = db.get_course_by_id(course_id)
     

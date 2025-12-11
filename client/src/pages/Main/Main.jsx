@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { showToast } from '../../components/Toast/Toast';
 import api from '../../utils/api';
 import './Main.css';
 
@@ -9,6 +10,9 @@ const Main = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+  const [joining, setJoining] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -22,6 +26,32 @@ const Main = () => {
       console.error('강의 목록 조회 실패:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleJoinByCode = async () => {
+    if (!inviteCode.trim()) {
+      showToast('초대 코드를 입력해주세요.', 'danger');
+      return;
+    }
+
+    setJoining(true);
+
+    try {
+      const response = await api.post(`/api/courses/invite/${inviteCode.trim()}/join`);
+      showToast(response.data.message, 'success');
+      setShowInviteModal(false);
+      setInviteCode('');
+      fetchCourses(); // 강의 목록 새로고침
+      
+      // 강의 페이지로 이동
+      setTimeout(() => {
+        navigate(`/courses/${response.data.course_id}`);
+      }, 1000);
+    } catch (error) {
+      showToast(error.response?.data?.message || '강의 참가에 실패했습니다.', 'danger');
+    } finally {
+      setJoining(false);
     }
   };
 
@@ -44,15 +74,62 @@ const Main = () => {
         <h2 className="section-title">
           {user?.role === 'professor' ? '담당 강의' : '수강 강의'}
         </h2>
-        {user?.role === 'professor' && (
+        {user?.role === 'professor' ? (
           <button 
             className="btn btn-primary"
             onClick={() => navigate('/courses/create')}
           >
             + 자료실 생성
           </button>
+        ) : (
+          <button 
+            className="btn btn-success"
+            onClick={() => setShowInviteModal(true)}
+          >
+            🔗 초대 코드로 참가
+          </button>
         )}
       </div>
+
+      {/* 초대 코드 입력 모달 */}
+      {showInviteModal && (
+        <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>강의 초대 코드 입력</h3>
+            <p style={{ color: '#666', marginBottom: '20px' }}>
+              교수님께 받은 초대 코드를 입력하세요.
+            </p>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="초대 코드 입력 (예: AbCdEfGh)"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              style={{ marginBottom: '20px' }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleJoinByCode}
+                disabled={joining}
+                style={{ flex: 1 }}
+              >
+                {joining ? '참가 중...' : '참가하기'}
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteCode('');
+                }}
+                style={{ flex: 1 }}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {courses.length > 0 ? (
         <div className="courses-grid">
