@@ -164,6 +164,120 @@ def create_course():
         'course_id': course_id
     }), 201
 
+@api_course_bp.route('/<course_id>/invite', methods=['POST'])
+def create_invitation(course_id):
+    """강의 초대 링크 생성 (교수만)"""
+    if not require_login():
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    
+    if session.get('role') != 'professor':
+        return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
+    
+    # 강의 확인
+    course = db.get_course_by_id(course_id)
+    if not course:
+        return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
+    
+    if course['professor_id'] != session['user_id']:
+        return jsonify({'success': False, 'message': '본인의 강의만 접근할 수 있습니다.'}), 403
+    
+    data = request.get_json() or {}
+    invitation_code = db.create_invitation(
+        course_id=course_id,
+        created_by=session['user_id'],
+        expires_at=data.get('expires_at'),
+        max_uses=data.get('max_uses', -1)
+    )
+    
+    return jsonify({
+        'success': True,
+        'invitation_code': invitation_code,
+        'invitation_url': f'/invite/{invitation_code}'
+    }), 201
+
+@api_course_bp.route('/public-invitations', methods=['GET'])
+def get_public_invitations():
+    """공개 초대 코드 목록 (로그인 불필요)"""
+    try:
+        # 활성화된 모든 초대 코드 조회
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT ci.invitation_code, ci.course_id, c.course_name, c.professor_name
+                FROM course_invitations ci
+                JOIN courses c ON ci.course_id = c.course_id
+                WHERE ci.is_active = 1
+                ORDER BY ci.created_at DESC
+                LIMIT 5
+            ''')
+            rows = cursor.fetchall()
+            
+            invitations = []
+            for row in rows:
+                invitations.append({
+                    'invitation_code': row['invitation_code'],
+                    'course_name': row['course_name'],
+                    'professor_name': row['professor_name']
+                })
+            
+            return jsonify({
+                'success': True,
+                'invitations': invitations
+            }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'invitations': []
+        }), 200
+
+@api_course_bp.route('/invite/<invitation_code>', methods=['GET'])
+def get_invitation_info(invitation_code):
+    """초대 링크 정보 조회"""
+    invitation = db.get_invitation(invitation_code)
+    
+    if not invitation:
+        return jsonify({'success': False, 'message': '유효하지 않은 초대 코드입니다.'}), 404
+    
+    course = db.get_course_by_id(invitation['course_id'])
+    
+    return jsonify({
+        'success': True,
+        'course': {
+            'course_id': course['course_id'],
+            'course_name': course['course_name'],
+            'professor_name': course['professor_name']
+        },
+        'is_active': invitation['is_active'] == 1,
+        'max_uses': invitation['max_uses'],
+        'current_uses': invitation['current_uses']
+    }), 200
+
+@api_course_bp.route('/invite/<invitation_code>/join', methods=['POST'])
+def join_course_by_invitation(invitation_code):
+    """초대 링크로 강의 참가"""
+    if not require_login():
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    
+    if session.get('role') != 'student':
+        return jsonify({'success': False, 'message': '학생만 강의에 참가할 수 있습니다.'}), 403
+    
+    student_id = session['user_id']
+    
+    if db.use_invitation(invitation_code, student_id):
+        invitation = db.get_invitation(invitation_code)
+        course = db.get_course_by_id(invitation['course_id'])
+        
+        return jsonify({
+            'success': True,
+            'message': f'"{course["course_name"]}" 강의에 참가했습니다!',
+            'course_id': course['course_id']
+        }), 200
+    else:
+        return jsonify({
+            'success': False,
+            'message': '초대 링크가 만료되었거나 유효하지 않습니다.'
+        }), 400
+
 @api_course_bp.route('/<course_id>/week/<int:week>/deadline', methods=['POST'])
 def set_week_deadline(course_id, week):
     """주차별 업로드 마감일 설정 (교수만)"""

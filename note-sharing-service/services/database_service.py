@@ -141,10 +141,27 @@ class DatabaseService:
                 )
             ''')
             
+            # Course Invitations 테이블 (강의 초대 링크)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS course_invitations (
+                    invitation_code TEXT PRIMARY KEY,
+                    course_id TEXT NOT NULL,
+                    created_by TEXT NOT NULL,
+                    expires_at TEXT,
+                    max_uses INTEGER DEFAULT -1,
+                    current_uses INTEGER DEFAULT 0,
+                    is_active INTEGER DEFAULT 1,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (course_id) REFERENCES courses(course_id),
+                    FOREIGN KEY (created_by) REFERENCES users(user_id)
+                )
+            ''')
+            
             # 인덱스 생성
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_materials_course_week ON materials(course_id, week)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_custom_pdfs_student ON custom_pdfs(student_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_invitations_course ON course_invitations(course_id)')
     
     def _row_to_dict(self, row) -> Dict:
         """sqlite3.Row를 딕셔너리로 변환"""
@@ -527,3 +544,84 @@ class DatabaseService:
                 WHERE user_id = ? AND is_read = 0
             ''', (user_id,))
             return cursor.fetchone()['count']
+    
+    # ===== 강의 초대 관련 =====
+    def create_invitation(self, course_id: str, created_by: str, expires_at: str = None, max_uses: int = -1) -> str:
+        """초대 링크 생성"""
+        import secrets
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 초대 코드 생성 (8자리 랜덤)
+            invitation_code = secrets.token_urlsafe(8)
+            
+            cursor.execute('''
+                INSERT INTO course_invitations 
+                (invitation_code, course_id, created_by, expires_at, max_uses)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (invitation_code, course_id, created_by, expires_at, max_uses))
+            
+            return invitation_code
+    
+    def get_invitation(self, invitation_code: str) -> Optional[Dict]:
+        """초대 링크 조회"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM course_invitations 
+                WHERE invitation_code = ?
+            ''', (invitation_code,))
+            return self._row_to_dict(cursor.fetchone())
+    
+    def use_invitation(self, invitation_code: str, student_id: str) -> bool:
+        """초대 링크 사용 (학생을 강의에 등록)"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 초대 정보 조회
+            invitation = self.get_invitation(invitation_code)
+            if not invitation:
+                return False
+            
+            # 유효성 검증
+            if not invitation['is_active']:
+                return False
+            
+            if invitation['max_uses'] > 0 and invitation['current_uses'] >= invitation['max_uses']:
+                return False
+            
+            # 강의에 학생 추가
+            course = self.get_course_by_id(invitation['course_id'])
+            if not course:
+                return False
+            
+            enrolled_students = course.get('enrolled_students', [])
+            if student_id not in enrolled_students:
+                enrolled_students.append(student_id)
+                students_str = ','.join(enrolled_students)
+                
+                cursor.execute('''
+                    UPDATE courses 
+                    SET enrolled_students = ?
+                    WHERE course_id = ?
+                ''', (students_str, invitation['course_id']))
+            
+            # 사용 횟수 증가
+            cursor.execute('''
+                UPDATE course_invitations 
+                SET current_uses = current_uses + 1
+                WHERE invitation_code = ?
+            ''', (invitation_code,))
+            
+            return True
+    
+    def get_invitations_by_course(self, course_id: str) -> List[Dict]:
+        """강의의 모든 초대 링크 조회"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM course_invitations 
+                WHERE course_id = ?
+                ORDER BY created_at DESC
+            ''', (course_id,))
+            return [self._row_to_dict(row) for row in cursor.fetchall()]

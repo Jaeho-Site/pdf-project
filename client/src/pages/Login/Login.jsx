@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { showToast } from '../../components/Toast/Toast';
+import api from '../../utils/api';
 import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [invitations, setInvitations] = useState([]);
   const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -17,6 +19,22 @@ const Login = () => {
       navigate('/', { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  // 공개 초대 코드 불러오기
+  useEffect(() => {
+    fetchPublicInvitations();
+  }, []);
+
+  const fetchPublicInvitations = async () => {
+    try {
+      const response = await api.get('/api/courses/public-invitations');
+      if (response.data.success) {
+        setInvitations(response.data.invitations);
+      }
+    } catch (error) {
+      console.log('초대 코드를 불러올 수 없습니다.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,6 +101,28 @@ const Login = () => {
         <div className="signup-link">
           계정이 없으신가요? <Link to="/signup">회원가입</Link>
         </div>
+
+        {invitations.length > 0 && (
+          <div className="invite-section">
+            <h3>🔗 참여 가능한 강의</h3>
+            <div className="invite-list">
+              {invitations.map((inv) => (
+                <div key={inv.invitation_code} className="invite-item">
+                  <div className="invite-info">
+                    <strong>{inv.course_name}</strong>
+                    <span className="invite-professor">👨‍🏫 {inv.professor_name}</span>
+                  </div>
+                  <Link 
+                    to={`/invite/${inv.invitation_code}`}
+                    className="btn-invite"
+                  >
+                    참가하기
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="test-accounts">
           <h3>📝 테스트 계정</h3>

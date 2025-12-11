@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login/Login';
 import Signup from './pages/Signup/Signup';
+import CourseInvite from './pages/CourseInvite/CourseInvite';
 import Main from './pages/Main/Main';
 import CourseDetail from './pages/CourseDetail/CourseDetail';
 import WeekMaterial from './pages/WeekMaterial/WeekMaterial';
@@ -74,6 +75,9 @@ function AppRoutes() {
       {/* 로그인/회원가입 페이지 */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      
+      {/* 초대 링크 페이지 (로그인 불필요) */}
+      <Route path="/invite/:inviteCode" element={<CourseInvite />} />
 
       {/* Protected Routes */}
       <Route
