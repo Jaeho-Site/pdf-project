@@ -1,21 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-PDF 처리 서비스
+PDF 처리 서비스 (GCS 버전)
 """
-from PyPDF2 import PdfReader, PdfWriter, PdfMerger
+from PyPDF2 import PdfReader, PdfWriter
 from pdf2image import convert_from_path
 from PIL import Image
 import os
-from typing import List, Dict, Optional
+import tempfile
+from typing import List, Optional
+from io import BytesIO
 
 class PDFService:
-    """PDF 처리 서비스"""
+    """PDF 처리 서비스 (GCS 연동)"""
     
-    def __init__(self, storage_dir='storage', poppler_path=None):
-        self.storage_dir = storage_dir
-        self.thumbnail_dir = os.path.join(storage_dir, 'thumbnails')
-        self.temp_dir = os.path.join(storage_dir, 'temp')
-        self.poppler_path = poppler_path  # Poppler 경로 (선택적)
+    def __init__(self, poppler_path=None):
+        self.poppler_path = poppler_path or self._find_poppler()
+    
+    def _find_poppler(self) -> Optional[str]:
+        """Poppler 경로 자동 감지 (Windows)"""
+        possible_paths = [
+            r"C:\poppler-25.07.0\Library\bin",
+            r"C:\poppler\Library\bin",
+            r"C:\Program Files\poppler\bin",
+            r"C:\poppler-0.68.0\bin",
+            os.path.join(os.environ.get('LOCALAPPDATA', ''), 'poppler', 'bin'),
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path) and os.path.exists(os.path.join(path, 'pdftoppm.exe')):
+                print(f"  [Poppler] 자동 감지: {path}")
+                return path
+        
+        return None
     
     def get_page_count(self, pdf_path: str) -> int:
         """PDF 페이지 수 조회"""
@@ -26,199 +42,56 @@ class PDFService:
             print(f"PDF 페이지 수 조회 오류: {e}")
             return 0
     
-    def convert_pdf_to_images(self, pdf_path: str, material_id: str, 
-                             dpi=150, force=False) -> List[str]:
+    def convert_pdf_to_images_from_gcs(self, gcs_path: str, material_id: str, 
+                                      storage, dpi=150) -> List[str]:
         """
-        PDF를 페이지별 이미지로 변환 (캐싱)
+        GCS의 PDF를 페이지별 이미지로 변환하여 GCS에 저장
         
         Args:
-            pdf_path: PDF 파일 경로
-            material_id: 자료 ID (캐시 폴더명)
+            gcs_path: PDF의 GCS 경로
+            material_id: 자료 ID
+            storage: GCSStorageService 인스턴스
             dpi: 이미지 해상도
-            force: 강제 재생성 여부
             
         Returns:
-            이미지 파일 경로 리스트
+            썸네일 GCS 경로 리스트
         """
-        thumbnail_folder = os.path.join(self.thumbnail_dir, material_id)
+        print(f"  [PDF→IMG] GCS에서 다운로드 중: {gcs_path}")
         
-        # 이미 변환된 경우 캐시 사용
-        if not force and os.path.exists(thumbnail_folder):
-            images = sorted([
-                os.path.join(thumbnail_folder, f) 
-                for f in os.listdir(thumbnail_folder) 
-                if f.endswith('.jpg')
-            ])
-            if images:
-                return images
-        
-        # 폴더 생성
-        os.makedirs(thumbnail_folder, exist_ok=True)
+        # GCS에서 임시 다운로드
+        temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
         
         try:
-            # Poppler 경로 자동 감지 또는 사용자 지정
+            if not storage.download_file(gcs_path, temp_pdf.name):
+                raise Exception("GCS 다운로드 실패")
+            
+            # PDF → 이미지 변환
             poppler_kwargs = {}
             if self.poppler_path:
                 poppler_kwargs['poppler_path'] = self.poppler_path
-                print(f"  [Poppler] 사용자 지정 경로: {self.poppler_path}")
-            else:
-                # Windows에서 일반적인 Poppler 경로들 시도
-                possible_paths = [
-                    r"C:\poppler-25.07.0\Library\bin",  # 사용자 시스템 경로
-                    r"C:\poppler\Library\bin",
-                    r"C:\Program Files\poppler\bin",
-                    r"C:\poppler-0.68.0\bin",
-                    os.path.join(os.environ.get('LOCALAPPDATA', ''), 'poppler', 'bin'),
-                ]
+            
+            images = convert_from_path(temp_pdf.name, dpi=dpi, **poppler_kwargs)
+            print(f"  [PDF→IMG] {len(images)}페이지 변환 완료")
+            
+            # 각 이미지를 GCS에 업로드
+            thumbnail_paths = []
+            for i, image in enumerate(images):
+                # 이미지를 바이트로 변환
+                img_buffer = BytesIO()
+                image.save(img_buffer, 'JPEG', quality=85, optimize=True)
+                img_bytes = img_buffer.getvalue()
                 
-                for path in possible_paths:
-                    if os.path.exists(path) and os.path.exists(os.path.join(path, 'pdftoppm.exe')):
-                        poppler_kwargs['poppler_path'] = path
-                        print(f"  [Poppler] 자동 감지 경로: {path}")
-                        break
+                # GCS에 업로드
+                gcs_thumb_path = storage.save_thumbnail(img_bytes, material_id, i + 1)
+                if gcs_thumb_path:
+                    thumbnail_paths.append(gcs_thumb_path)
+                    print(f"  [GCS] 썸네일 업로드: page_{i+1}.jpg")
             
-            # PDF → 이미지 변환
-            images = convert_from_path(pdf_path, dpi=dpi, **poppler_kwargs)
-            
-            image_paths = []
-            for i, image in enumerate(images, start=1):
-                image_path = os.path.join(thumbnail_folder, f'page_{i}.jpg')
-                image.save(image_path, 'JPEG', quality=85)
-                image_paths.append(image_path)
-            
-            return image_paths
-        
-        except Exception as e:
-            error_msg = str(e)
-            print(f"  ❌ PDF → 이미지 변환 오류: {error_msg}")
-            
-            # Poppler 관련 오류인지 확인
-            if 'poppler' in error_msg.lower() or 'pdftoppm' in error_msg.lower():
-                print("\n" + "=" * 70)
-                print("⚠️  Poppler가 설치되지 않았거나 PATH에 등록되지 않았습니다!")
-                print("=" * 70)
-                print("\n📖 해결 방법:")
-                print("1. INSTALL_POPPLER.md 파일을 참조하세요")
-                print("2. 또는 관리자 권한 CMD에서 실행:")
-                print("   choco install poppler -y")
-                print("\n또는 pdf_service.py에서 poppler_path를 직접 지정하세요.")
-                print("=" * 70 + "\n")
-            
-            return []
-    
-    def get_thumbnail_paths(self, material_id: str) -> List[str]:
-        """썸네일 이미지 경로 조회 (이미 생성된 경우)"""
-        thumbnail_folder = os.path.join(self.thumbnail_dir, material_id)
-        
-        if not os.path.exists(thumbnail_folder):
-            return []
-        
-        images = sorted([
-            os.path.join(thumbnail_folder, f) 
-            for f in os.listdir(thumbnail_folder) 
-            if f.endswith('.jpg')
-        ])
-        
-        return images
-    
-    def create_custom_pdf(self, page_selections: List[Dict], 
-                         output_path: str) -> bool:
-        """
-        선택된 페이지들로 새로운 PDF 생성
-        
-        Args:
-            page_selections: 선택된 페이지 정보 리스트
-                [
-                    {
-                        'source_material_id': 'M001',
-                        'source_pdf_path': 'storage/.../file.pdf',
-                        'page_num': 1  # 1-based
-                    },
-                    ...
-                ]
-            output_path: 출력 PDF 경로
-            
-        Returns:
-            성공 여부
-        """
-        try:
-            merger = PdfMerger()
-            temp_files = []
-            
-            os.makedirs(self.temp_dir, exist_ok=True)
-            
-            for idx, selection in enumerate(page_selections):
-                source_pdf = selection['source_pdf_path']
-                page_num = selection['page_num'] - 1  # 0-based
-                
-                # 원본 PDF에서 해당 페이지 추출
-                reader = PdfReader(source_pdf)
-                
-                # 페이지 번호 유효성 검사
-                if page_num < 0 or page_num >= len(reader.pages):
-                    print(f"경고: 페이지 번호 {page_num + 1}이 범위를 벗어남 (최대 {len(reader.pages)})")
-                    continue
-                
-                writer = PdfWriter()
-                writer.add_page(reader.pages[page_num])
-                
-                # 임시 파일 생성
-                temp_file = f"temp_{idx}_{selection['source_material_id']}_page_{page_num + 1}.pdf"
-                temp_path = os.path.join(self.temp_dir, temp_file)
-                
-                with open(temp_path, 'wb') as f:
-                    writer.write(f)
-                
-                merger.append(temp_path)
-                temp_files.append(temp_path)
-            
-            # 최종 PDF 생성
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            merger.write(output_path)
-            merger.close()
-            
-            # 임시 파일 삭제
-            for temp_file in temp_files:
-                if os.path.exists(temp_file):
-                    os.remove(temp_file)
-            
-            return True
+            return thumbnail_paths
             
         except Exception as e:
-            print(f"PDF 생성 오류: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-    
-    def get_pdf_info(self, pdf_path: str) -> Optional[Dict]:
-        """PDF 정보 조회"""
-        try:
-            reader = PdfReader(pdf_path)
-            return {
-                'page_count': len(reader.pages),
-                'file_size': os.path.getsize(pdf_path),
-                'file_size_mb': round(os.path.getsize(pdf_path) / (1024 * 1024), 2)
-            }
-        except Exception as e:
-            print(f"PDF 정보 조회 오류: {e}")
-            return None
-    
-    def extract_page_as_pdf(self, source_pdf_path: str, page_num: int, 
-                           output_path: str) -> bool:
-        """단일 페이지를 별도 PDF로 추출"""
-        try:
-            reader = PdfReader(source_pdf_path)
-            writer = PdfWriter()
-            
-            # 페이지 번호는 1-based
-            writer.add_page(reader.pages[page_num - 1])
-            
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            with open(output_path, 'wb') as f:
-                writer.write(f)
-            
-            return True
-            
-        except Exception as e:
-            print(f"페이지 추출 오류: {e}")
-            return False
+            print(f"  [ERROR] 썸네일 생성 실패: {e}")
+            raise e
+        finally:
+            if os.path.exists(temp_pdf.name):
+                os.unlink(temp_pdf.name)

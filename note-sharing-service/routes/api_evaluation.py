@@ -3,14 +3,14 @@
 필기 평가 API 라우트
 """
 from flask import Blueprint, request, jsonify, session
-from services.data_service import DataService
+from services.database_service import DatabaseService
 from services.pdf_service import PDFService
 from services.gemini_service import GeminiService
 from services.evaluation_scheduler import EvaluationScheduler
 import os
 
 api_evaluation_bp = Blueprint('api_evaluation', __name__)
-data_service = DataService()
+db = DatabaseService()
 pdf_service = PDFService()
 
 def require_login():
@@ -28,7 +28,7 @@ def trigger_evaluation(course_id, week):
     if session.get('role') != 'professor':
         return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
     
-    course = data_service.get_course_by_id(course_id)
+    course = db.get_course_by_id(course_id)
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     

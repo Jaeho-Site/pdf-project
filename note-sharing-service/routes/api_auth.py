@@ -3,10 +3,10 @@
 API 인증 라우트 (JSON 응답)
 """
 from flask import Blueprint, request, jsonify, session
-from services.data_service import DataService
+from services.database_service import DatabaseService
 
 api_auth_bp = Blueprint('api_auth', __name__)
-data_service = DataService()
+db = DatabaseService()
 
 @api_auth_bp.route('/login', methods=['POST'])
 def login():
@@ -15,7 +15,7 @@ def login():
     email = data.get('email')
     password = data.get('password')
     
-    user = data_service.authenticate_user(email, password)
+    user = db.authenticate_user(email, password)
     
     if user:
         # 세션 설정
@@ -65,7 +65,7 @@ def get_current_user():
             'message': '로그인이 필요합니다.'
         }), 401
     
-    user = data_service.get_user_by_id(session['user_id'])
+    user = db.get_user_by_id(session['user_id'])
     
     if user:
         user_data = {k: v for k, v in user.items() if k != 'password'}
@@ -78,4 +78,3 @@ def get_current_user():
             'success': False,
             'message': '사용자를 찾을 수 없습니다.'
         }), 404
-

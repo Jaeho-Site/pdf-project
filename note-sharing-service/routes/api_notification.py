@@ -3,10 +3,10 @@
 API 알림 라우트 (JSON 응답)
 """
 from flask import Blueprint, jsonify, session
-from services.data_service import DataService
+from services.database_service import DatabaseService
 
 api_notification_bp = Blueprint('api_notification', __name__)
-data_service = DataService()
+db = DatabaseService()
 
 def require_login():
     """로그인 확인"""
@@ -21,7 +21,7 @@ def get_notifications():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
     user_id = session['user_id']
-    notifications = data_service.get_notifications_by_user(user_id)
+    notifications = db.get_notifications_by_user(user_id)
     
     return jsonify({
         'success': True,
@@ -34,7 +34,7 @@ def mark_as_read(notification_id):
     if not require_login():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
-    data_service.mark_notification_as_read(notification_id)
+    db.mark_notification_as_read(notification_id)
     
     return jsonify({
         'success': True,
@@ -48,7 +48,7 @@ def get_unread_count():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
     user_id = session['user_id']
-    count = data_service.get_unread_notification_count(user_id)
+    count = db.get_unread_notification_count(user_id)
     
     return jsonify({
         'success': True,

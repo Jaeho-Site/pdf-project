@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-API 강의 라우트 (JSON 응답)
+API 강의 라우트 (JSON 응답) - SQLite + GCS 버전
 """
 from flask import Blueprint, request, jsonify, session
-from services.data_service import DataService
+from services.database_service import DatabaseService
 
 api_course_bp = Blueprint('api_course', __name__)
-data_service = DataService()
+db = DatabaseService()
 
 def require_login():
     """로그인 확인"""
@@ -24,9 +24,9 @@ def get_courses():
     role = session['role']
     
     if role == 'professor':
-        courses = data_service.get_courses_by_professor(user_id)
+        courses = db.get_courses_by_professor(user_id)
     else:
-        courses = data_service.get_courses_by_student(user_id)
+        courses = db.get_courses_by_student(user_id)
     
     return jsonify({
         'success': True,
@@ -39,7 +39,7 @@ def get_course_detail(course_id):
     if not require_login():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
-    course = data_service.get_course_by_id(course_id)
+    course = db.get_course_by_id(course_id)
     
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
@@ -47,9 +47,9 @@ def get_course_detail(course_id):
     # 주차별 자료 통계
     weeks_data = []
     for week in range(1, 17):
-        materials = data_service.get_materials_by_course_week(course_id, week)
-        professor_materials = [m for m in materials if m['is_professor_material']]
-        student_materials = [m for m in materials if not m['is_professor_material']]
+        materials = db.get_materials_by_course_week(course_id, week)
+        professor_materials = [m for m in materials if m['type'] == 'professor']
+        student_materials = [m for m in materials if m['type'] == 'student']
         
         weeks_data.append({
             'week': week,
@@ -72,7 +72,7 @@ def get_week_materials(course_id, week):
         if not require_login():
             return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
         
-        course = data_service.get_course_by_id(course_id)
+        course = db.get_course_by_id(course_id)
         
         if not course:
             return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
@@ -81,28 +81,19 @@ def get_week_materials(course_id, week):
         role = session.get('role')
         can_view = True
         if role == 'student':
-            try:
-                can_view = data_service.can_view_materials(course_id, week)
-            except Exception as e:
-                print(f"[ERROR] can_view_materials 오류: {e}")
-                import traceback
-                traceback.print_exc()
-                # 오류 발생 시 안전하게 True로 설정
-                can_view = True
+            can_view = db.can_view_materials(course_id, week)
         
-        materials = data_service.get_materials_by_course_week(course_id, week)
+        materials = db.get_materials_by_course_week(course_id, week)
         
-        professor_materials = [m for m in materials if m['is_professor_material']]
-        student_materials = [m for m in materials if not m['is_professor_material']]
+        professor_materials = [m for m in materials if m['type'] == 'professor']
+        student_materials = [m for m in materials if m['type'] == 'student']
         
-        # 학생 자료는 마감일이 지나지 않았으면 숨김 (교수는 항상 볼 수 있음)
-        # 단, 본인이 업로드한 자료는 항상 볼 수 있음
+        # 학생 자료는 마감일이 지나지 않았으면 숨김 (본인 자료는 항상 표시)
         if role == 'student' and not can_view:
             user_id = session.get('user_id')
-            # 본인이 업로드한 자료만 필터링
             student_materials = [m for m in student_materials if m.get('uploader_id') == user_id]
         
-        # 정렬 (점수 순 추가)
+        # 정렬
         sort_by = request.args.get('sort', 'latest')
         if sort_by == 'name':
             student_materials.sort(key=lambda x: x.get('uploader_name', ''))
@@ -111,39 +102,21 @@ def get_week_materials(course_id, week):
         elif sort_by == 'downloads':
             student_materials.sort(key=lambda x: x.get('download_count', 0), reverse=True)
         elif sort_by == 'score':
-            # 점수 순 정렬 (점수가 없는 것은 뒤로)
             student_materials.sort(key=lambda x: (
-                x.get('quality_score') is None,
-                -(x.get('quality_score') or 0)
+                x.get('evaluation_score') is None,
+                -(x.get('evaluation_score') or 0)
             ))
         else:
             student_materials.sort(key=lambda x: x.get('upload_date', ''), reverse=True)
         
-        # 마감일 정보 추가
-        deadline = None
-        evaluation_status = None
-        try:
-            deadline = data_service.get_week_deadline(course_id, week)
-            weeks_config = course.get('weeks', {})
-            week_str = str(week)
-            if week_str in weeks_config:
-                evaluation_status = weeks_config[week_str].get('evaluation_status', 'pending')
-        except Exception as e:
-            print(f"[ERROR] 마감일 정보 조회 오류: {e}")
-            import traceback
-            traceback.print_exc()
+        # 마감일 정보
+        deadline = db.get_week_deadline(course_id, week)
+        weeks_config = course.get('weeks', {})
+        week_str = str(week)
+        evaluation_status = weeks_config.get(week_str, {}).get('evaluation_status', 'pending') if week_str in weeks_config else 'pending'
         
-        # can_upload: 교수는 항상 true, 학생은 마감일 체크
-        can_upload = True
-        if role == 'student':
-            try:
-                can_upload = data_service.is_upload_period_open(course_id, week)
-            except Exception as e:
-                print(f"[ERROR] is_upload_period_open 오류: {e}")
-                import traceback
-                traceback.print_exc()
-                # 오류 발생 시 안전하게 True로 설정
-                can_upload = True
+        # 업로드 가능 여부
+        can_upload = True if role == 'professor' else db.is_upload_period_open(course_id, week)
         
         return jsonify({
             'success': True,
@@ -156,7 +129,7 @@ def get_week_materials(course_id, week):
             'evaluation_status': evaluation_status
         }), 200
     except Exception as e:
-        print(f"[ERROR] get_week_materials 전체 오류: {e}")
+        print(f"[ERROR] get_week_materials: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -175,18 +148,16 @@ def create_course():
     
     data = request.get_json()
     professor_id = session['user_id']
-    professor = data_service.get_user_by_id(professor_id)
+    professor = db.get_user_by_id(professor_id)
     
     course = {
         'course_name': data.get('course_name'),
         'professor_id': professor_id,
         'professor_name': professor['name'],
-        'year': int(data.get('year')),
-        'semester': int(data.get('semester')),
         'enrolled_students': []
     }
     
-    course_id = data_service.add_course(course)
+    course_id = db.add_course(course)
     
     return jsonify({
         'success': True,
@@ -203,7 +174,7 @@ def set_week_deadline(course_id, week):
     if session.get('role') != 'professor':
         return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
     
-    course = data_service.get_course_by_id(course_id)
+    course = db.get_course_by_id(course_id)
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
@@ -216,7 +187,7 @@ def set_week_deadline(course_id, week):
     if not deadline:
         return jsonify({'success': False, 'message': '마감일을 입력해주세요.'}), 400
     
-    data_service.set_week_deadline(course_id, week, deadline)
+    db.set_week_deadline(course_id, week, deadline)
     
     return jsonify({
         'success': True,
@@ -233,27 +204,27 @@ def get_custom_pdf_materials(course_id, week):
     if session.get('role') != 'student':
         return jsonify({'success': False, 'message': '학생만 접근할 수 있습니다.'}), 403
     
-    course = data_service.get_course_by_id(course_id)
+    course = db.get_course_by_id(course_id)
     
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
     # 마감일이 지나지 않았으면 접근 불가
-    if not data_service.can_view_materials(course_id, week):
-        deadline = data_service.get_week_deadline(course_id, week)
+    if not db.can_view_materials(course_id, week):
+        deadline = db.get_week_deadline(course_id, week)
         deadline_str = deadline[:10] if deadline else "알 수 없음"
         return jsonify({
             'success': False, 
             'message': f'업로드 기간이 종료되어야 조합이 가능합니다. (마감일: {deadline_str})'
         }), 403
     
-    materials = data_service.get_materials_by_course_week(course_id, week)
-    student_materials = [m for m in materials if not m['is_professor_material']]
+    materials = db.get_materials_by_course_week(course_id, week)
+    student_materials = [m for m in materials if m['type'] == 'student']
     
-    # 점수 순으로 정렬 (점수가 없는 것은 뒤로)
+    # 점수 순으로 정렬
     student_materials.sort(key=lambda x: (
-        x.get('quality_score') is None,
-        -(x.get('quality_score') or 0)
+        x.get('evaluation_score') is None,
+        -(x.get('evaluation_score') or 0)
     ))
     
     return jsonify({
@@ -261,4 +232,3 @@ def get_custom_pdf_materials(course_id, week):
         'course': course,
         'materials': student_materials
     }), 200
-

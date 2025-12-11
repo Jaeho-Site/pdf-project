@@ -1,0 +1,59 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "note-sharing-service/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+
+      - name: Build Docker image
+        working-directory: note-sharing-service
+        run: |
+          docker build -t asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:${{ github.sha }} \
+                       -t asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:${{ github.sha }}
+          docker push asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest
+
+      - name: Deploy to VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="
+              docker pull asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest && \
+              docker stop api 2>/dev/null || true && \
+              docker rm api 2>/dev/null || true && \
+              docker run -d --name api --restart always \
+                -p 5000:5000 \
+                -v ~/data:/app/data \
+                -e GCS_BUCKET=${{ secrets.GCS_BUCKET }} \
+                asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest
+            "
+
+      - name: Check deployment
+        run: |
+          sleep 5
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="docker logs --tail 20 api"
