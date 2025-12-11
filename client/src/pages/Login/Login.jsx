@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { showToast } from '../../components/Toast/Toast';
@@ -8,8 +8,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // 이미 로그인된 사용자는 메인 페이지로 리다이렉트
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,12 +26,11 @@ const Login = () => {
     
     if (result.success) {
       showToast('로그인 성공!', 'success');
-      navigate('/');
+      // navigate는 useEffect에서 자동으로 처리됨
     } else {
       showToast(result.message, 'danger');
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
