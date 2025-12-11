@@ -33,7 +33,7 @@ const CourseDetail = () => {
 
   const handleCreateInviteLink = async () => {
     try {
-      const response = await api.post(`/api/courses/${courseId}/invite`);
+      const response = await api.post(`/api/courses/${courseId}/invite`, {});
       setInviteCode(response.data.invitation_code);
       setShowInviteModal(true);
       showToast('초대 링크가 생성되었습니다!', 'success');
