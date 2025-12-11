@@ -7,6 +7,7 @@ from services.database_service import DatabaseService
 from services.pdf_service import PDFService
 from services.gemini_service import GeminiService
 from services.evaluation_scheduler import EvaluationScheduler
+from utils.auth_middleware import check_auth
 import os
 
 api_evaluation_bp = Blueprint('api_evaluation', __name__)
@@ -15,9 +16,7 @@ pdf_service = PDFService()
 
 def require_login():
     """로그인 확인"""
-    if 'user_id' not in session:
-        return False
-    return True
+    return check_auth()
 
 @api_evaluation_bp.route('/courses/<course_id>/week/<int:week>/evaluate', methods=['POST'])
 def trigger_evaluation(course_id, week):

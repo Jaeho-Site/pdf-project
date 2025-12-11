@@ -5,6 +5,7 @@ API 나만의 PDF 라우트 (SQLite + GCS 버전)
 from flask import Blueprint, request, jsonify, session, send_file
 from services.database_service import DatabaseService
 from services.gcs_storage_service import GCSStorageService
+from utils.auth_middleware import check_auth
 from PyPDF2 import PdfReader, PdfWriter
 import os
 import tempfile
@@ -16,9 +17,7 @@ storage = GCSStorageService()
 
 def require_login():
     """로그인 확인"""
-    if 'user_id' not in session:
-        return False
-    return True
+    return check_auth()
 
 @api_custom_pdf_bp.route('/courses/<course_id>/week/<int:week>/generate-custom', methods=['POST'])
 def generate_custom_pdf(course_id, week):

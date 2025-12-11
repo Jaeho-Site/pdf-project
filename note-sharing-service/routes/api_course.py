@@ -4,15 +4,14 @@ API 강의 라우트 (JSON 응답) - SQLite + GCS 버전
 """
 from flask import Blueprint, request, jsonify, session
 from services.database_service import DatabaseService
+from utils.auth_middleware import check_auth
 
 api_course_bp = Blueprint('api_course', __name__)
 db = DatabaseService()
 
 def require_login():
-    """로그인 확인"""
-    if 'user_id' not in session:
-        return False
-    return True
+    """로그인 확인 - 세션 또는 헤더"""
+    return check_auth()
 
 @api_course_bp.route('', methods=['GET'])
 def get_courses():

@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify, session, send_file
 from services.database_service import DatabaseService
 from services.gcs_storage_service import GCSStorageService
 from services.pdf_service import PDFService
+from utils.auth_middleware import check_auth
 import os
 import tempfile
 
@@ -16,9 +17,7 @@ pdf_service = PDFService()
 
 def require_login():
     """로그인 확인"""
-    if 'user_id' not in session:
-        return False
-    return True
+    return check_auth()
 
 @api_material_bp.route('/courses/<course_id>/week/<int:week>/upload', methods=['POST'])
 def upload_material(course_id, week):

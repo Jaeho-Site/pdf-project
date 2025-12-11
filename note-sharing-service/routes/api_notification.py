@@ -4,15 +4,14 @@ API 알림 라우트 (JSON 응답)
 """
 from flask import Blueprint, jsonify, session
 from services.database_service import DatabaseService
+from utils.auth_middleware import check_auth
 
 api_notification_bp = Blueprint('api_notification', __name__)
 db = DatabaseService()
 
 def require_login():
     """로그인 확인"""
-    if 'user_id' not in session:
-        return False
-    return True
+    return check_auth()
 
 @api_notification_bp.route('', methods=['GET'])
 def get_notifications():
