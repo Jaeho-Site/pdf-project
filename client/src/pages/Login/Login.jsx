@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { showToast } from '../../components/Toast/Toast';
-import api from '../../utils/api';
-import './Login.css';
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { showToast } from "../../components/Toast/Toast";
+import api from "../../utils/api";
+import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const { login, user, loading: authLoading } = useAuth();
@@ -16,7 +16,7 @@ const Login = () => {
   // 페이지 로드 시 이미 로그인된 사용자는 메인 페이지로 리다이렉트
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -27,12 +27,24 @@ const Login = () => {
 
   const fetchPublicInvitations = async () => {
     try {
-      const response = await api.get('/api/courses/public-invitations');
+      const response = await api.get("/api/courses/public-invitations");
       if (response.data.success) {
         setInvitations(response.data.invitations);
       }
     } catch (error) {
-      console.log('초대 코드를 불러올 수 없습니다.');
+      console.log("초대 코드를 불러올 수 없습니다.");
+    }
+  };
+
+  const handleInitDemoCourse = async () => {
+    try {
+      const response = await api.post("/api/courses/init-demo-course");
+      if (response.data.success) {
+        showToast("데모 강의가 생성되었습니다!", "success");
+        fetchPublicInvitations(); // 목록 새로고침
+      }
+    } catch (error) {
+      showToast("강의 생성 실패", "danger");
     }
   };
 
@@ -42,21 +54,21 @@ const Login = () => {
 
     try {
       const result = await login(email, password);
-      
+
       if (result.success) {
-        showToast('로그인 성공!', 'success');
+        showToast("로그인 성공!", "success");
         // 상태 업데이트를 위한 짧은 딜레이 후 리다이렉트
         setTimeout(() => {
           setLoading(false);
-          navigate('/', { replace: true });
+          navigate("/", { replace: true });
         }, 100);
       } else {
-        showToast(result.message, 'danger');
+        showToast(result.message, "danger");
         setLoading(false);
       }
     } catch (error) {
-      console.error('로그인 오류:', error);
-      showToast('로그인 중 오류가 발생했습니다.', 'danger');
+      console.error("로그인 오류:", error);
+      showToast("로그인 중 오류가 발생했습니다.", "danger");
       setLoading(false);
     }
   };
@@ -94,7 +106,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? '로그인 중...' : '로그인'}
+            {loading ? "로그인 중..." : "로그인"}
           </button>
         </form>
 
@@ -110,9 +122,11 @@ const Login = () => {
                 <div key={inv.invitation_code} className="invite-item">
                   <div className="invite-info">
                     <strong>{inv.course_name}</strong>
-                    <span className="invite-professor">👨‍🏫 {inv.professor_name}</span>
+                    <span className="invite-professor">
+                      👨‍🏫 {inv.professor_name}
+                    </span>
                   </div>
-                  <Link 
+                  <Link
                     to={`/invite/${inv.invitation_code}`}
                     className="btn-invite"
                   >
@@ -127,15 +141,40 @@ const Login = () => {
         <div className="test-accounts">
           <h3>📝 테스트 계정</h3>
           <div className="account-list">
-            <strong>교수:</strong><br />
-            • kim.prof@university.ac.kr / prof1234<br />
-            • lee.prof@university.ac.kr / prof5678<br />
+            <strong>교수:</strong>
             <br />
-            <strong>학생:</strong><br />
-            • hong@student.ac.kr / student1<br />
-            • kim@student.ac.kr / student2<br />
-            • lee@student.ac.kr / student3
+            • kim.prof@university.ac.kr / prof1234
+            <br />
+            • lee.prof@university.ac.kr / prof5678
+            <br />
+            <br />
+            <strong>학생:</strong>
+            <br />
+            • hong@student.ac.kr / student1
+            <br />
+            • kim@student.ac.kr / student2
+            <br />• lee@student.ac.kr / student3
           </div>
+
+          {/* 데모 강의 생성 버튼 (개발용) */}
+          {invitations.length === 0 && (
+            <button
+              onClick={handleInitDemoCourse}
+              style={{
+                marginTop: "15px",
+                padding: "8px 16px",
+                background: "#28a745",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "12px",
+                width: "100%",
+              }}
+            >
+              🚀 데모 강의 생성 (심화프로젝트랩)
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -143,4 +182,3 @@ const Login = () => {
 };
 
 export default Login;
-

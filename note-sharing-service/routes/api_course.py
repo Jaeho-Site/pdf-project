@@ -164,6 +164,69 @@ def create_course():
         'course_id': course_id
     }), 201
 
+@api_course_bp.route('/init-demo-course', methods=['POST'])
+def init_demo_course():
+    """데모 강의 생성 (심화프로젝트랩) - 관리자용"""
+    try:
+        # 이미 존재하는지 확인
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT course_id FROM courses WHERE course_name = '심화프로젝트랩'")
+            existing = cursor.fetchone()
+            
+            if existing:
+                # 기존 강의의 초대 코드 반환
+                invitations = db.get_invitations_by_course(existing['course_id'])
+                if invitations:
+                    return jsonify({
+                        'success': True,
+                        'message': '이미 존재하는 강의입니다.',
+                        'course_id': existing['course_id'],
+                        'invitation_code': invitations[0]['invitation_code']
+                    }), 200
+        
+        # 김교수 계정 확인
+        professor = db.get_user_by_email('kim.prof@university.ac.kr')
+        if not professor:
+            return jsonify({'success': False, 'message': '교수 계정을 찾을 수 없습니다.'}), 404
+        
+        # 강의 생성
+        course_data = {
+            'course_name': '심화프로젝트랩',
+            'professor_id': professor['user_id'],
+            'professor_name': professor['name'],
+            'enrolled_students': []
+        }
+        
+        course_id = db.add_course(course_data)
+        
+        # 주차별 마감일 설정 (1~5주차)
+        deadline = "2024-12-16T23:59:59"
+        for week in range(1, 6):
+            db.set_week_deadline(course_id, week, deadline)
+        
+        # 초대 링크 생성
+        invitation_code = db.create_invitation(
+            course_id=course_id,
+            created_by=professor['user_id'],
+            expires_at=None,
+            max_uses=-1
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': '심화프로젝트랩 강의가 생성되었습니다!',
+            'course_id': course_id,
+            'invitation_code': invitation_code,
+            'invitation_url': f'/invite/{invitation_code}'
+        }), 201
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'강의 생성 실패: {str(e)}'
+        }), 500
+
 @api_course_bp.route('/<course_id>/invite', methods=['POST'])
 def create_invitation(course_id):
     """강의 초대 링크 생성 (교수만)"""
