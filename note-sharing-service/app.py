@@ -17,7 +17,7 @@ def create_app():
     # CORS 설정 (React 앱 연동)
     CORS(app, 
          supports_credentials=True, 
-         origins=['http://localhost:3000', 'http://localhost:5173'],
+         origins=['http://localhost:3000', 'http://localhost:5173','https://pdf-project-seven.vercel.app'],
          allow_headers=['Content-Type', 'Authorization'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     
