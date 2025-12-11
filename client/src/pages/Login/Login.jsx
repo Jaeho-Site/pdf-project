@@ -8,27 +8,37 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // 이미 로그인된 사용자는 메인 페이지로 리다이렉트
+  // 페이지 로드 시 이미 로그인된 사용자는 메인 페이지로 리다이렉트
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       navigate('/', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
-      showToast('로그인 성공!', 'success');
-      // navigate는 useEffect에서 자동으로 처리됨
-    } else {
-      showToast(result.message, 'danger');
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        showToast('로그인 성공!', 'success');
+        // 상태 업데이트를 위한 짧은 딜레이 후 리다이렉트
+        setTimeout(() => {
+          setLoading(false);
+          navigate('/', { replace: true });
+        }, 100);
+      } else {
+        showToast(result.message, 'danger');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error);
+      showToast('로그인 중 오류가 발생했습니다.', 'danger');
       setLoading(false);
     }
   };

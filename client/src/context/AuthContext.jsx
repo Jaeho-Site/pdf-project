@@ -33,12 +33,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('🔐 로그인 시도:', email);
       const response = await api.post('/api/auth/login', { email, password });
       const userData = response.data.user;
+      console.log('✅ 로그인 응답:', userData);
+      
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
+      console.log('💾 localStorage 저장 완료');
+      
       return { success: true };
     } catch (error) {
+      console.error('❌ 로그인 실패:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || '로그인에 실패했습니다.' 

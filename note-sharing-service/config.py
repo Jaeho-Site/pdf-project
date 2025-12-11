@@ -18,9 +18,9 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     DEBUG = os.getenv('DEBUG', 'True') == 'True'
     
-    # 세션 설정
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_SECURE = False  # HTTP에서는 False, HTTPS에서는 True
+    # 세션 설정 (크로스 도메인 허용)
+    SESSION_COOKIE_SAMESITE = 'None'  # 크로스 도메인 허용
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_SECURE', 'False') == 'True'  # HTTPS 사용 시 True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_DOMAIN = None
     

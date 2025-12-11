@@ -15,11 +15,19 @@ import CourseCreate from './pages/CourseCreate/CourseCreate';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
+  console.log('🛡️ ProtectedRoute - loading:', loading, 'user:', user);
+
   if (loading) {
     return <div className="container">로딩 중...</div>;
   }
 
-  return user ? children : <Navigate to="/login" replace />;
+  if (!user) {
+    console.log('⚠️ 사용자 없음 - /login으로 리다이렉트');
+    return <Navigate to="/login" replace />;
+  }
+
+  console.log('✅ 인증 통과');
+  return children;
 };
 
 // 교수 전용 Route
