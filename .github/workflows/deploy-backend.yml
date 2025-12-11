@@ -41,10 +41,10 @@ jobs:
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
             --zone=${{ secrets.GCP_ZONE }} \
             --command="
-              docker pull asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest && \
-              docker stop api 2>/dev/null || true && \
-              docker rm api 2>/dev/null || true && \
-              docker run -d --name api --restart always \
+              sudo docker pull asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/note-sharing/api:latest && \
+              sudo docker stop api 2>/dev/null || true && \
+              sudo docker rm api 2>/dev/null || true && \
+              sudo docker run -d --name api --restart always \
                 -p 5000:5000 \
                 -v ~/data:/app/data \
                 -e GCS_BUCKET=${{ secrets.GCS_BUCKET }} \
@@ -56,4 +56,4 @@ jobs:
           sleep 5
           gcloud compute ssh ${{ secrets.GCP_VM_NAME }} \
             --zone=${{ secrets.GCP_ZONE }} \
-            --command="docker logs --tail 20 api"
+            --command="sudo docker logs --tail 20 api"
