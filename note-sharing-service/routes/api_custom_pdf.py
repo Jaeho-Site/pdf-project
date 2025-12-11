@@ -168,6 +168,7 @@ def download_custom_pdf(custom_pdf_id):
         if storage.download_file(gcs_path, temp_file.name):
             return send_file(
                 temp_file.name,
+                mimetype='application/pdf',
                 as_attachment=True,
                 download_name=custom_pdf['title']
             )

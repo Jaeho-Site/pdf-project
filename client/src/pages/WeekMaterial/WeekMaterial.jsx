@@ -71,15 +71,29 @@ const WeekMaterial = () => {
       const response = await api.get(`/api/materials/${materialId}/download`, {
         responseType: 'blob'
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       showToast('다운로드 실패', 'danger');
+    }
+  };
+
+  const handleView = async (materialId, fileName) => {
+    try {
+      const response = await api.get(`/api/materials/${materialId}/view`, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+      // URL은 나중에 자동으로 정리됨
+    } catch (error) {
+      showToast('미리보기 실패', 'danger');
     }
   };
 
@@ -278,14 +292,12 @@ const WeekMaterial = () => {
                   </div>
                 </div>
                 <div className="material-actions">
-                  <a
-                    href={`/api/materials/${material.material_id}/view`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
                     className="btn btn-secondary"
+                    onClick={() => handleView(material.material_id, material.file_name)}
                   >
                     보기
-                  </a>
+                  </button>
                   <button
                     className="btn btn-primary"
                     onClick={() => handleDownload(material.material_id, material.file_name)}
@@ -359,14 +371,12 @@ const WeekMaterial = () => {
                     </div>
                   </div>
                   <div className="material-actions">
-                    <a
-                      href={`/api/materials/${material.material_id}/view`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
                       className="btn btn-secondary"
+                      onClick={() => handleView(material.material_id, material.file_name)}
                     >
                       보기
-                    </a>
+                    </button>
                     <button
                       className="btn btn-primary"
                       onClick={() => handleDownload(material.material_id, material.file_name)}

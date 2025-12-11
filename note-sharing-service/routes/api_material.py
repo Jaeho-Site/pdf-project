@@ -172,6 +172,7 @@ def download_material(material_id):
         if storage.download_file(gcs_path, temp_file.name):
             return send_file(
                 temp_file.name,
+                mimetype='application/pdf',
                 as_attachment=True,
                 download_name=material['filename']
             )
@@ -210,7 +211,14 @@ def view_material(material_id):
     
     try:
         if storage.download_file(gcs_path, temp_file.name):
-            return send_file(temp_file.name, mimetype='application/pdf')
+            response = send_file(
+                temp_file.name,
+                mimetype='application/pdf',
+                as_attachment=False,
+                download_name=material['filename']
+            )
+            response.headers['Content-Type'] = 'application/pdf'
+            return response
         else:
             return jsonify({'success': False, 'message': 'GCS 다운로드 실패'}), 500
     except Exception as e:

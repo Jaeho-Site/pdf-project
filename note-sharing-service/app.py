@@ -19,6 +19,7 @@ def create_app():
          supports_credentials=True, 
          origins=['http://localhost:3000', 'http://localhost:5173','https://pdf-project-seven.vercel.app'],
          allow_headers=['Content-Type', 'Authorization', 'X-User-ID', 'X-User-Role', 'X-User-Email'],
+         expose_headers=['Content-Disposition', 'Content-Type'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
     
     # 설정 초기화
