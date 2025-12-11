@@ -11,8 +11,8 @@ Flask + React 기반 대학 필기자료 공유 플랫폼
 ├── .github/workflows/       # GitHub Actions (백엔드 자동 배포)
 ├── SETUP.md                # 배포 전 설정
 ├── deploy.md               # 백엔드 배포 (GCP VM + Docker)
-├── VERCEL_DEPLOY.md        # 프론트엔드 배포 (Vercel) ⭐ 추천
-└── CICD_SETUP.md           # 백엔드 CI/CD 설정
+├── SIMPLE_HTTPS.md         # HTTPS 인증서 설정 (5분 완성) ⭐
+└── VERCEL_DEPLOY.md        # 프론트엔드 배포 (Vercel) ⭐
 ```
 
 ## 🚀 빠른 시작
@@ -24,8 +24,8 @@ Flask + React 기반 대학 필기자료 공유 플랫폼
 ### 2. 배포
 
 - **백엔드 배포:** `deploy.md` 참고 (GCP VM + Docker)
-- **프론트엔드 배포:** `VERCEL_DEPLOY.md` 참고 (Vercel) ⭐ **추천!**
-- **백엔드 자동 재배포:** `CICD_SETUP.md` 참고 (GitHub Actions)
+- **백엔드 HTTPS 설정:** `SIMPLE_HTTPS.md` 참고 (필수!) ⭐
+- **프론트엔드 배포:** `VERCEL_DEPLOY.md` 참고 (Vercel) ⭐
 
 ## 🛠️ 기술 스택
 

@@ -174,6 +174,34 @@ class DatabaseService:
             cursor.execute('SELECT * FROM users WHERE email = ? AND password = ?', (email, password))
             return self._row_to_dict(cursor.fetchone())
     
+    def create_user(self, user: Dict) -> str:
+        """새 사용자 생성"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 이메일 중복 확인
+            cursor.execute('SELECT user_id FROM users WHERE email = ?', (user['email'],))
+            if cursor.fetchone():
+                raise ValueError('이미 존재하는 이메일입니다.')
+            
+            # user_id 자동 생성
+            if user['role'] == 'professor':
+                cursor.execute("SELECT COUNT(*) as count FROM users WHERE role = 'professor'")
+                count = cursor.fetchone()['count']
+                user_id = f"P{count + 1:05d}"
+            else:  # student
+                cursor.execute("SELECT COUNT(*) as count FROM users WHERE role = 'student'")
+                count = cursor.fetchone()['count']
+                user_id = f"{202300000 + count + 1}"
+            
+            cursor.execute('''
+                INSERT INTO users (user_id, email, password, name, role, student_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, user['email'], user['password'], user['name'], 
+                  user['role'], user.get('student_id', user_id if user['role'] == 'student' else None)))
+            
+            return user_id
+    
     def get_all_users(self) -> List[Dict]:
         """모든 사용자 조회"""
         with self.get_connection() as conn:

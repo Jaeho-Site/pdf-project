@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login/Login';
+import Signup from './pages/Signup/Signup';
 import Main from './pages/Main/Main';
 import CourseDetail from './pages/CourseDetail/CourseDetail';
 import WeekMaterial from './pages/WeekMaterial/WeekMaterial';
@@ -62,8 +63,9 @@ const StudentRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      {/* 로그인 페이지 */}
+      {/* 로그인/회원가입 페이지 */}
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
       {/* Protected Routes */}
       <Route

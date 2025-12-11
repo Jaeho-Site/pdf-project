@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { showToast } from '../../components/Toast/Toast';
 import './Login.css';
@@ -63,6 +63,10 @@ const Login = () => {
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
+
+        <div className="signup-link">
+          계정이 없으신가요? <Link to="/signup">회원가입</Link>
+        </div>
 
         <div className="test-accounts">
           <h3>📝 테스트 계정</h3>

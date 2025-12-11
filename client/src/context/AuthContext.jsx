@@ -16,6 +16,21 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const signup = async (userData) => {
+    try {
+      const response = await api.post('/api/auth/signup', userData);
+      return { 
+        success: true,
+        message: response.data.message 
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || '회원가입에 실패했습니다.' 
+      };
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await api.post('/api/auth/login', { email, password });
@@ -43,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, signup, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
