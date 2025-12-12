@@ -15,20 +15,17 @@ api_custom_pdf_bp = Blueprint('api_custom_pdf', __name__)
 db = DatabaseService()
 storage = GCSStorageService()
 
-def require_login():
-    """로그인 확인"""
-    return check_auth()
-
-@api_custom_pdf_bp.route('/courses/<course_id>/week/<int:week>/generate-custom', methods=['POST'])
+@api_custom_pdf_bp.route('/courses/<course_id>/week/<int:week>/generate-custom', methods=['POST', 'OPTIONS'])
 def generate_custom_pdf(course_id, week):
     """나만의 PDF 생성"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    if request.method == 'OPTIONS':
+        return '', 200
     
-    if session.get('role') != 'student':
-        return jsonify({'success': False, 'message': '학생만 접근할 수 있습니다.'}), 403
+    auth_result = check_auth(required_role='student')
+    if auth_result:
+        return auth_result
     
-    user_id = session['user_id']
+    user_id = request.headers.get('X-User-ID')
     user = db.get_user_by_id(user_id)
     course = db.get_course_by_id(course_id)
     
@@ -121,16 +118,14 @@ def generate_custom_pdf(course_id, week):
         'custom_pdf_id': custom_pdf_id
     }), 201
 
-@api_custom_pdf_bp.route('/custom-pdfs/my-list', methods=['GET'])
+@api_custom_pdf_bp.route('/custom-pdfs/my-list', methods=['GET', 'OPTIONS'])
 def get_my_custom_pdfs():
     """내 나만의 PDF 목록"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth(required_role='student')
+    if auth_result:
+        return auth_result
     
-    if session.get('role') != 'student':
-        return jsonify({'success': False, 'message': '학생만 접근할 수 있습니다.'}), 403
-    
-    user_id = session['user_id']
+    user_id = request.headers.get('X-User-ID')
     custom_pdfs = db.get_custom_pdfs_by_student(user_id)
     
     for cp in custom_pdfs:
@@ -142,16 +137,14 @@ def get_my_custom_pdfs():
         'custom_pdfs': custom_pdfs
     }), 200
 
-@api_custom_pdf_bp.route('/custom-pdfs/<custom_pdf_id>/download', methods=['GET'])
+@api_custom_pdf_bp.route('/custom-pdfs/<custom_pdf_id>/download', methods=['GET', 'OPTIONS'])
 def download_custom_pdf(custom_pdf_id):
     """나만의 PDF 다운로드"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth(required_role='student')
+    if auth_result:
+        return auth_result
     
-    if session.get('role') != 'student':
-        return jsonify({'success': False, 'message': '학생만 접근할 수 있습니다.'}), 403
-    
-    user_id = session['user_id']
+    user_id = request.headers.get('X-User-ID')
     custom_pdf = db.get_custom_pdf_by_id(custom_pdf_id)
     
     if not custom_pdf:

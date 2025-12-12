@@ -14,24 +14,23 @@ api_evaluation_bp = Blueprint('api_evaluation', __name__)
 db = DatabaseService()
 pdf_service = PDFService()
 
-def require_login():
-    """로그인 확인"""
-    return check_auth()
-
-@api_evaluation_bp.route('/courses/<course_id>/week/<int:week>/evaluate', methods=['POST'])
+@api_evaluation_bp.route('/courses/<course_id>/week/<int:week>/evaluate', methods=['POST', 'OPTIONS'])
 def trigger_evaluation(course_id, week):
     """수동으로 평가 트리거 (교수만)"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    if request.method == 'OPTIONS':
+        return '', 200
     
-    if session.get('role') != 'professor':
-        return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
+    auth_result = check_auth(required_role='professor')
+    if auth_result:
+        return auth_result
+    
+    user_id = request.headers.get('X-User-ID')
     
     course = db.get_course_by_id(course_id)
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
-    if course['professor_id'] != session['user_id']:
+    if course['professor_id'] != user_id:
         return jsonify({'success': False, 'message': '본인의 강의만 평가할 수 있습니다.'}), 403
     
     # Gemini API 키 확인

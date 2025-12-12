@@ -9,7 +9,7 @@ from utils.auth_middleware import check_auth
 api_course_bp = Blueprint('api_course', __name__)
 db = DatabaseService()
 
-@api_course_bp.route('', methods=['GET'])
+@api_course_bp.route('', methods=['GET', 'OPTIONS'])
 def get_courses():
     """강의 목록 조회"""
     auth_result = check_auth()
@@ -29,7 +29,7 @@ def get_courses():
         'courses': courses
     }), 200
 
-@api_course_bp.route('/<course_id>', methods=['GET'])
+@api_course_bp.route('/<course_id>', methods=['GET', 'OPTIONS'])
 def get_course_detail(course_id):
     """강의 상세 조회"""
     auth_result = check_auth()
@@ -62,7 +62,7 @@ def get_course_detail(course_id):
         'weeks_data': weeks_data
     }), 200
 
-@api_course_bp.route('/<course_id>/week/<int:week>', methods=['GET'])
+@api_course_bp.route('/<course_id>/week/<int:week>', methods=['GET', 'OPTIONS'])
 def get_week_materials(course_id, week):
     """주차별 자료 조회"""
     try:
@@ -381,7 +381,7 @@ def set_week_deadline(course_id, week):
         'deadline': deadline
     }), 200
 
-@api_course_bp.route('/<course_id>/week/<int:week>/create-custom', methods=['GET'])
+@api_course_bp.route('/<course_id>/week/<int:week>/create-custom', methods=['GET', 'OPTIONS'])
 def get_custom_pdf_materials(course_id, week):
     """나만의 PDF 제작용 자료 조회"""
     auth_result = check_auth(required_role='student')

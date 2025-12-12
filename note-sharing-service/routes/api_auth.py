@@ -8,9 +8,12 @@ from services.database_service import DatabaseService
 api_auth_bp = Blueprint('api_auth', __name__)
 db = DatabaseService()
 
-@api_auth_bp.route('/signup', methods=['POST'])
+@api_auth_bp.route('/signup', methods=['POST', 'OPTIONS'])
 def signup():
     """API 회원가입 (JSON)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.get_json()
     
     # 필수 필드 검증
@@ -73,9 +76,12 @@ def signup():
             'message': '회원가입 중 오류가 발생했습니다.'
         }), 500
 
-@api_auth_bp.route('/login', methods=['POST'])
+@api_auth_bp.route('/login', methods=['POST', 'OPTIONS'])
 def login():
     """API 로그인 (JSON)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -112,25 +118,30 @@ def login():
             'message': '이메일 또는 비밀번호가 올바르지 않습니다.'
         }), 401
 
-@api_auth_bp.route('/logout', methods=['POST'])
+@api_auth_bp.route('/logout', methods=['POST', 'OPTIONS'])
 def logout():
     """API 로그아웃"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     session.clear()
     return jsonify({
         'success': True,
         'message': '로그아웃되었습니다.'
     }), 200
 
-@api_auth_bp.route('/me', methods=['GET'])
+@api_auth_bp.route('/me', methods=['GET', 'OPTIONS'])
 def get_current_user():
     """현재 로그인한 사용자 정보"""
-    if 'user_id' not in session:
-        return jsonify({
-            'success': False,
-            'message': '로그인이 필요합니다.'
-        }), 401
+    if request.method == 'OPTIONS':
+        return '', 200
     
-    user = db.get_user_by_id(session['user_id'])
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
+    
+    user_id = request.headers.get('X-User-ID')
+    user = db.get_user_by_id(user_id)
     
     if user:
         user_data = {k: v for k, v in user.items() if k != 'password'}
@@ -144,9 +155,12 @@ def get_current_user():
             'message': '사용자를 찾을 수 없습니다.'
         }), 404
 
-@api_auth_bp.route('/init-demo-users', methods=['POST'])
+@api_auth_bp.route('/init-demo-users', methods=['POST', 'OPTIONS'])
 def init_demo_users():
     """데모 사용자 생성 - 초기 설정용"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         # 교수가 있는지 확인
         professor = db.get_user_by_email('kim.prof@university.ac.kr')

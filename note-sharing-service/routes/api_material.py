@@ -15,27 +15,27 @@ db = DatabaseService()
 storage = GCSStorageService()
 pdf_service = PDFService()
 
-def require_login():
-    """로그인 확인"""
-    return check_auth()
-
-@api_material_bp.route('/courses/<course_id>/week/<int:week>/upload', methods=['POST'])
+@api_material_bp.route('/courses/<course_id>/week/<int:week>/upload', methods=['POST', 'OPTIONS'])
 def upload_material(course_id, week):
     """자료 업로드"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     print("\n" + "=" * 70)
     print(f"[UPLOAD] 업로드 요청 받음")
     print(f"  - Course: {course_id}, Week: {week}")
     
-    if not require_login():
-        print(f"  ❌ 로그인되지 않음!")
+    auth_result = check_auth()
+    if auth_result:
+        print(f"  ❌ 인증 실패!")
         print("=" * 70)
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+        return auth_result
     
-    user_id = session.get('user_id')
-    role = session.get('role')
-    name = session.get('name')
+    user_id = request.headers.get('X-User-ID')
+    role = request.headers.get('X-User-Role')
+    name = session.get('name') or db.get_user_by_id(user_id)['name']
     
-    print(f"  ✅ 세션 정보:")
+    print(f"  ✅ 사용자 정보:")
     print(f"    - User ID: {user_id}")
     print(f"    - Name: {name}")
     print(f"    - Role: {role}")
@@ -143,13 +143,14 @@ def upload_material(course_id, week):
         'type': mat_type
     }), 201
 
-@api_material_bp.route('/materials/<material_id>/download', methods=['GET'])
+@api_material_bp.route('/materials/<material_id>/download', methods=['GET', 'OPTIONS'])
 def download_material(material_id):
     """자료 다운로드"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
     
-    user_id = session['user_id']
+    user_id = request.headers.get('X-User-ID')
     material = db.get_material_by_id(material_id)
     
     if not material:
@@ -184,13 +185,14 @@ def download_material(material_id):
             os.unlink(temp_file.name)
         return jsonify({'success': False, 'message': f'다운로드 오류: {str(e)}'}), 500
 
-@api_material_bp.route('/materials/<material_id>/view', methods=['GET'])
+@api_material_bp.route('/materials/<material_id>/view', methods=['GET', 'OPTIONS'])
 def view_material(material_id):
     """자료 보기"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
     
-    user_id = session['user_id']
+    user_id = request.headers.get('X-User-ID')
     material = db.get_material_by_id(material_id)
     
     if not material:
@@ -227,11 +229,12 @@ def view_material(material_id):
             os.unlink(temp_file.name)
         return jsonify({'success': False, 'message': f'조회 오류: {str(e)}'}), 500
 
-@api_material_bp.route('/materials/<material_id>/thumbnails', methods=['GET'])
+@api_material_bp.route('/materials/<material_id>/thumbnails', methods=['GET', 'OPTIONS'])
 def get_material_thumbnails(material_id):
     """자료의 썸네일 목록 조회"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
     
     material = db.get_material_by_id(material_id)
     

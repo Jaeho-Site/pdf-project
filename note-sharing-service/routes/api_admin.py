@@ -8,7 +8,7 @@ from services.database_service import DatabaseService
 api_admin_bp = Blueprint('api_admin', __name__)
 db = DatabaseService()
 
-@api_admin_bp.route('/users', methods=['GET'])
+@api_admin_bp.route('/users', methods=['GET', 'OPTIONS'])
 def get_all_users():
     """모든 사용자 조회"""
     users = db.get_all_users()
@@ -20,7 +20,7 @@ def get_all_users():
         'users': safe_users
     }), 200
 
-@api_admin_bp.route('/courses', methods=['GET'])
+@api_admin_bp.route('/courses', methods=['GET', 'OPTIONS'])
 def get_all_courses():
     """모든 강의 조회"""
     courses = db.get_all_courses()
@@ -30,9 +30,12 @@ def get_all_courses():
         'courses': courses
     }), 200
 
-@api_admin_bp.route('/seed-users', methods=['POST'])
+@api_admin_bp.route('/seed-users', methods=['POST', 'OPTIONS'])
 def seed_users():
     """사용자 대량 생성"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.get_json()
     users = data.get('users', [])
     
@@ -54,9 +57,12 @@ def seed_users():
         'error_details': errors
     }), 201
 
-@api_admin_bp.route('/seed-courses', methods=['POST'])
+@api_admin_bp.route('/seed-courses', methods=['POST', 'OPTIONS'])
 def seed_courses():
     """강의 대량 생성"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.get_json()
     courses = data.get('courses', [])
     
@@ -113,9 +119,12 @@ def seed_courses():
         'error_details': errors
     }), 201
 
-@api_admin_bp.route('/reset-db', methods=['POST'])
+@api_admin_bp.route('/reset-db', methods=['POST', 'OPTIONS'])
 def reset_db():
     """DB 초기화 (위험!)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     # 보안을 위해 특정 키 필요
     data = request.get_json() or {}
     secret = data.get('secret')
