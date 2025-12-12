@@ -87,22 +87,14 @@ const Login = () => {
 
         <div className="test-accounts">
           <h3>📝 테스트 계정</h3>
-          <div className="account-list">
-            <strong>교수:</strong>
-            <br />
-            • kim.prof@university.ac.kr / prof1234
-            <br />
-            • lee.prof@university.ac.kr / prof5678
-            <br />
-            <br />
-            <strong>학생:</strong>
-            <br />
-            • hong@student.ac.kr / student1
-            <br />
-            • kim@student.ac.kr / student2
-            <br />• lee@student.ac.kr / student3
+          <div className="test-account-main">
+            <div className="test-account-item">
+              <strong>학생 계정</strong>
+              <div className="test-account-credentials">
+                cnu123@cnu.o.ac.kr / asdfasdf
+              </div>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
