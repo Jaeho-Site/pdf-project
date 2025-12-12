@@ -9,7 +9,6 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [invitations, setInvitations] = useState([]);
   const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -19,34 +18,6 @@ const Login = () => {
       navigate("/", { replace: true });
     }
   }, [user, authLoading, navigate]);
-
-  // 공개 초대 코드 불러오기
-  useEffect(() => {
-    fetchPublicInvitations();
-  }, []);
-
-  const fetchPublicInvitations = async () => {
-    try {
-      const response = await api.get("/api/courses/public-invitations");
-      if (response.data.success) {
-        setInvitations(response.data.invitations);
-      }
-    } catch (error) {
-      console.log("초대 코드를 불러올 수 없습니다.");
-    }
-  };
-
-  const handleInitDemoCourse = async () => {
-    try {
-      const response = await api.post("/api/courses/init-demo-course");
-      if (response.data.success) {
-        showToast("데모 강의가 생성되었습니다!", "success");
-        fetchPublicInvitations(); // 목록 새로고침
-      }
-    } catch (error) {
-      showToast("강의 생성 실패", "danger");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,30 +85,6 @@ const Login = () => {
           계정이 없으신가요? <Link to="/signup">회원가입</Link>
         </div>
 
-        {invitations.length > 0 && (
-          <div className="invite-section">
-            <h3>🔗 참여 가능한 강의</h3>
-            <div className="invite-list">
-              {invitations.map((inv) => (
-                <div key={inv.invitation_code} className="invite-item">
-                  <div className="invite-info">
-                    <strong>{inv.course_name}</strong>
-                    <span className="invite-professor">
-                      👨‍🏫 {inv.professor_name}
-                    </span>
-                  </div>
-                  <Link
-                    to={`/invite/${inv.invitation_code}`}
-                    className="btn-invite"
-                  >
-                    참가하기
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="test-accounts">
           <h3>📝 테스트 계정</h3>
           <div className="account-list">
@@ -156,25 +103,6 @@ const Login = () => {
             <br />• lee@student.ac.kr / student3
           </div>
 
-          {/* 데모 강의 생성 버튼 (개발용) */}
-          {invitations.length === 0 && (
-            <button
-              onClick={handleInitDemoCourse}
-              style={{
-                marginTop: "15px",
-                padding: "8px 16px",
-                background: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "12px",
-                width: "100%",
-              }}
-            >
-              🚀 데모 강의 생성 (심화프로젝트랩)
-            </button>
-          )}
         </div>
       </div>
     </div>

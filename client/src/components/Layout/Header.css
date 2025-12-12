@@ -35,8 +35,10 @@
 
 .user-info {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 1.25rem;
+  flex-wrap: nowrap;
 }
 
 .nav-links {
@@ -79,6 +81,7 @@
 
 .user-profile {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
@@ -88,6 +91,12 @@
   font-weight: 600;
   font-size: 0.9rem;
   color: #475569;
+  white-space: nowrap;
+}
+
+.user-profile span {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .user-profile span:first-child {
