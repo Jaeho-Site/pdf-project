@@ -25,7 +25,7 @@ class Config:
     SESSION_COOKIE_DOMAIN = None
     
     # 파일 업로드 설정
-    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
+    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB로 증가
     ALLOWED_EXTENSIONS = {'pdf'}
     
     # PDF 이미지 변환 설정

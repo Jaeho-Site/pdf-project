@@ -29,8 +29,9 @@ const Main = () => {
     }
   };
 
-  const handleJoinByCode = async () => {
-    if (!inviteCode.trim()) {
+  const handleJoinByCode = async (code = null) => {
+    const codeToUse = code || inviteCode.trim();
+    if (!codeToUse) {
       showToast('초대 코드를 입력해주세요.', 'danger');
       return;
     }
@@ -38,7 +39,7 @@ const Main = () => {
     setJoining(true);
 
     try {
-      const response = await api.post(`/api/courses/invite/${inviteCode.trim()}/join`);
+      const response = await api.post(`/api/courses/invite/${codeToUse}/join`);
       showToast(response.data.message, 'success');
       setShowInviteModal(false);
       setInviteCode('');
@@ -54,6 +55,9 @@ const Main = () => {
       setJoining(false);
     }
   };
+
+  // 추천 초대 코드 (이교수의 심화프로젝트랩[ALL])
+  const RECOMMENDED_INVITE_CODE = 'ZR6Hsr5nkHg';
 
   if (loading) {
     return <div className="container">로딩 중...</div>;
@@ -178,6 +182,63 @@ const Main = () => {
                 자료실 생성하기
               </button>
             </p>
+          )}
+          {user?.role === 'student' && (
+            <div style={{ 
+              marginTop: '2rem', 
+              padding: '1.5rem', 
+              backgroundColor: '#f8f9fa', 
+              borderRadius: '8px',
+              border: '2px solid #4CAF50',
+              maxWidth: '500px',
+              margin: '2rem auto 0'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                color: '#4CAF50'
+              }}>
+                ✨ 추천 강의
+              </div>
+              <p style={{ marginBottom: '1rem', color: '#666' }}>
+                이교수의 <strong>"심화프로젝트랩[ALL]"</strong> 강의에 참가하시겠어요?
+              </p>
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem', 
+                alignItems: 'center',
+                marginBottom: '1rem',
+                padding: '0.75rem',
+                backgroundColor: 'white',
+                borderRadius: '4px',
+                border: '1px solid #ddd'
+              }}>
+                <span style={{ color: '#999', fontSize: '0.9rem' }}>초대 코드:</span>
+                <code style={{ 
+                  flex: 1, 
+                  padding: '0.5rem', 
+                  backgroundColor: '#f5f5f5', 
+                  borderRadius: '4px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold'
+                }}>
+                  {RECOMMENDED_INVITE_CODE}
+                </code>
+              </div>
+              <button 
+                className="btn btn-success"
+                onClick={() => handleJoinByCode(RECOMMENDED_INVITE_CODE)}
+                disabled={joining}
+                style={{ width: '100%', fontSize: '1rem', padding: '0.75rem' }}
+              >
+                {joining ? '참가 중...' : '🎯 이 강의에 참가하기'}
+              </button>
+            </div>
           )}
         </div>
       )}

@@ -14,10 +14,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # CORS 설정 (React 앱 연동)
+    # CORS 설정 (React 앱 연동) - 모든 origin 허용
     CORS(app, 
          supports_credentials=True, 
-         origins=['http://localhost:3000', 'http://localhost:5173','https://pdf-project-seven.vercel.app'],
+         origins='*',  # 모든 origin 허용
          allow_headers=['Content-Type', 'Authorization', 'X-User-ID', 'X-User-Role', 'X-User-Email'],
          expose_headers=['Content-Disposition', 'Content-Type'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
@@ -71,6 +71,11 @@ def create_app():
     @app.errorhandler(404)
     def not_found(e):
         return {'success': False, 'message': 'API endpoint not found'}, 404
+    
+    # 413 에러 핸들러 (파일 크기 초과)
+    @app.errorhandler(413)
+    def request_entity_too_large(e):
+        return {'success': False, 'message': f'파일 크기가 너무 큽니다. 최대 {app.config.get("MAX_CONTENT_LENGTH", 0) // (1024*1024)}MB까지 업로드 가능합니다.'}, 413
     
     # 500 에러 핸들러
     @app.errorhandler(500)
