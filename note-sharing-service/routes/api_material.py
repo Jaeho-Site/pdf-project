@@ -2,7 +2,7 @@
 """
 API 자료 업로드/다운로드 라우트 (SQLite + GCS 버전)
 """
-from flask import Blueprint, request, jsonify, session, send_file
+from flask import Blueprint, request, jsonify, session, send_file, current_app
 from services.database_service import DatabaseService
 from services.gcs_storage_service import GCSStorageService
 from services.pdf_service import PDFService
@@ -19,7 +19,12 @@ pdf_service = PDFService()
 def upload_material(course_id, week):
     """자료 업로드"""
     if request.method == 'OPTIONS':
-        return '', 200
+        response = jsonify({})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-ID, X-User-Role, X-User-Email, Accept')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '3600')
+        return response, 200
     
     print("\n" + "=" * 70)
     print(f"[UPLOAD] 업로드 요청 받음")
@@ -65,22 +70,66 @@ def upload_material(course_id, week):
     if not storage.allowed_file(file.filename):
         return jsonify({'success': False, 'message': 'PDF 파일만 업로드 가능합니다.'}), 400
     
+    # 파일 크기 체크 및 상세 로깅
+    try:
+        # 파일 스트림의 크기 확인
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # 다시 시작 위치로
+        
+        max_size = current_app.config.get('MAX_CONTENT_LENGTH', 100 * 1024 * 1024)
+        print(f"  📊 파일 정보:")
+        print(f"    - 파일명: {file.filename}")
+        print(f"    - 크기: {file_size / 1024:.2f}KB ({file_size / 1024 / 1024:.2f}MB)")
+        print(f"    - 최대 허용: {max_size / 1024 / 1024:.0f}MB")
+        
+        if file_size > max_size:
+            print(f"  ❌ 파일 크기 초과!")
+            return jsonify({
+                'success': False, 
+                'message': f'파일 크기가 너무 큽니다. ({file_size / 1024 / 1024:.2f}MB / 최대 {max_size / 1024 / 1024:.0f}MB)'
+            }), 413
+        
+        if file_size == 0:
+            print(f"  ❌ 빈 파일!")
+            return jsonify({
+                'success': False, 
+                'message': '파일이 비어있습니다.'
+            }), 400
+            
+    except Exception as e:
+        print(f"  ⚠️ 파일 크기 확인 실패: {e}")
+        import traceback
+        traceback.print_exc()
+        # 크기 확인 실패해도 계속 진행
+    
     user = db.get_user_by_id(user_id)
     
     # role에 따라 분기
-    if role == 'professor':
-        result = storage.save_professor_material(file, course_id, week, user_id)
-        mat_type = 'professor'
-        print(f"  📁 저장 타입: 교수 자료")
-        print(f"  📂 GCS 경로: storage/professor/{course_id}/week_{week}/")
-    else:
-        result = storage.save_student_material(file, course_id, week, user_id)
-        mat_type = 'student'
-        print(f"  📁 저장 타입: 학생 자료")
-        print(f"  📂 GCS 경로: storage/students/{user_id}/{course_id}/week_{week}/")
-    
-    if not result:
-        return jsonify({'success': False, 'message': '파일 업로드에 실패했습니다.'}), 500
+    try:
+        print(f"  📤 GCS 업로드 시작...")
+        if role == 'professor':
+            result = storage.save_professor_material(file, course_id, week, user_id)
+            mat_type = 'professor'
+            print(f"  📁 저장 타입: 교수 자료")
+            print(f"  📂 GCS 경로: storage/professor/{course_id}/week_{week}/")
+        else:
+            result = storage.save_student_material(file, course_id, week, user_id)
+            mat_type = 'student'
+            print(f"  📁 저장 타입: 학생 자료")
+            print(f"  📂 GCS 경로: storage/students/{user_id}/{course_id}/week_{week}/")
+        
+        if not result:
+            print(f"  ❌ GCS 업로드 실패: result가 None")
+            return jsonify({'success': False, 'message': '파일 업로드에 실패했습니다. (GCS 저장 실패)'}), 500
+    except Exception as e:
+        print(f"  ❌ 업로드 중 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False, 
+            'message': f'파일 업로드 중 오류가 발생했습니다: {str(e)}'
+        }), 500
     
     gcs_path, filename = result
     print(f"  ✅ GCS 업로드 성공: {gcs_path}")

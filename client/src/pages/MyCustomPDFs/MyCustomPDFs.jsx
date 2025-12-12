@@ -119,19 +119,6 @@ const MyCustomPDFs = () => {
                   </button>
                 </div>
               </div>
-
-              <div className="page-selections">
-                <div className="page-selections-title">
-                  📄 선택한 페이지 ({pdf.page_selections?.length || 0}개)
-                </div>
-                <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                  {pdf.page_selections?.map((selection, index) => (
-                    <div key={index} className="page-selection-item">
-                      {index + 1}. {selection.source_student_name}님의 {selection.page_num}페이지
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           ))}
         </div>

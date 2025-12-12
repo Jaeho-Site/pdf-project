@@ -18,9 +18,24 @@ def create_app():
     CORS(app, 
          supports_credentials=True, 
          origins='*',  # 모든 origin 허용
-         allow_headers=['Content-Type', 'Authorization', 'X-User-ID', 'X-User-Role', 'X-User-Email'],
-         expose_headers=['Content-Disposition', 'Content-Type'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+         allow_headers=['Content-Type', 'Authorization', 'X-User-ID', 'X-User-Role', 'X-User-Email', 'Accept', 'Content-Length'],
+         expose_headers=['Content-Disposition', 'Content-Type', 'Content-Length'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+         max_age=3600)
+    
+    # CORS 헤더를 명시적으로 추가 (추가 보장)
+    @app.after_request
+    def after_request(response):
+        origin = request.headers.get('Origin')
+        if origin:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+        else:
+            response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-ID, X-User-Role, X-User-Email, Accept, Content-Length')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        response.headers.add('Access-Control-Max-Age', '3600')
+        return response
     
     # 설정 초기화
     Config.init_app(app)
@@ -75,7 +90,9 @@ def create_app():
     # 413 에러 핸들러 (파일 크기 초과)
     @app.errorhandler(413)
     def request_entity_too_large(e):
-        return {'success': False, 'message': f'파일 크기가 너무 큽니다. 최대 {app.config.get("MAX_CONTENT_LENGTH", 0) // (1024*1024)}MB까지 업로드 가능합니다.'}, 413
+        max_size_mb = app.config.get("MAX_CONTENT_LENGTH", 0) // (1024*1024)
+        max_size_kb = app.config.get("MAX_CONTENT_LENGTH", 0) // 1024
+        return {'success': False, 'message': f'파일 크기가 너무 큽니다. 최대 {max_size_mb}MB ({max_size_kb}KB)까지 업로드 가능합니다.'}, 413
     
     # 500 에러 핸들러
     @app.errorhandler(500)

@@ -146,9 +146,6 @@ const Main = () => {
               <div className="course-header">
                 <div>
                   <div className="course-title">{course.course_name}</div>
-                  <div className="course-semester">
-                    {course.year}년 {course.semester}학기
-                  </div>
                   {user?.role === 'student' && (
                     <div className="course-professor">
                       👨‍🏫 {course.professor_name}
