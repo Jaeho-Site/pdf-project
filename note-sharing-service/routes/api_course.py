@@ -136,9 +136,12 @@ def get_week_materials(course_id, week):
             'message': f'자료 조회 중 오류가 발생했습니다: {str(e)}'
         }), 500
 
-@api_course_bp.route('/create', methods=['POST'])
+@api_course_bp.route('/create', methods=['POST', 'OPTIONS'])
 def create_course():
     """강의 생성 (교수만)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     if not require_login():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
@@ -164,9 +167,12 @@ def create_course():
         'course_id': course_id
     }), 201
 
-@api_course_bp.route('/init-demo-course', methods=['POST'])
+@api_course_bp.route('/init-demo-course', methods=['POST', 'OPTIONS'])
 def init_demo_course():
     """데모 강의 생성 (심화프로젝트랩) - 관리자용"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         # 이미 존재하는지 확인
         with db.get_connection() as conn:
@@ -227,9 +233,12 @@ def init_demo_course():
             'message': f'강의 생성 실패: {str(e)}'
         }), 500
 
-@api_course_bp.route('/<course_id>/invite', methods=['POST'])
+@api_course_bp.route('/<course_id>/invite', methods=['POST', 'OPTIONS'])
 def create_invitation(course_id):
     """강의 초대 링크 생성 (교수만)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     if not require_login():
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
     
@@ -315,9 +324,12 @@ def get_invitation_info(invitation_code):
         'current_uses': invitation['current_uses']
     }), 200
 
-@api_course_bp.route('/invite/<invitation_code>/join', methods=['POST'])
+@api_course_bp.route('/invite/<invitation_code>/join', methods=['POST', 'OPTIONS'])
 def join_course_by_invitation(invitation_code):
     """초대 링크로 강의 참가"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     auth_result = check_auth(required_role='student')
     if auth_result:
         return auth_result
@@ -339,9 +351,12 @@ def join_course_by_invitation(invitation_code):
             'message': '초대 링크가 만료되었거나 유효하지 않습니다.'
         }), 400
 
-@api_course_bp.route('/<course_id>/week/<int:week>/deadline', methods=['POST'])
+@api_course_bp.route('/<course_id>/week/<int:week>/deadline', methods=['POST', 'OPTIONS'])
 def set_week_deadline(course_id, week):
     """주차별 업로드 마감일 설정 (교수만)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     auth_result = check_auth(required_role='professor')
     if auth_result:
         return auth_result

@@ -5,11 +5,24 @@
 from flask import session, request, jsonify
 from functools import wraps
 
-def check_auth():
-    """인증 확인 - 세션 또는 헤더"""
+def check_auth(required_role=None):
+    """
+    인증 확인 - 세션 또는 헤더
+    required_role: 'student', 'professor', None (둘 다 허용)
+    
+    반환값:
+    - None: 인증 성공
+    - (jsonify Response, status_code): 인증 실패
+    """
+    # OPTIONS 요청은 항상 허용 (CORS preflight)
+    if request.method == 'OPTIONS':
+        return ('', 200)
+    
     # 1. 세션 확인
     if 'user_id' in session:
-        return True
+        if required_role and session.get('role') != required_role:
+            return jsonify({'success': False, 'message': f'{required_role} 권한이 필요합니다.'}), 403
+        return None
     
     # 2. 헤더 확인
     user_id = request.headers.get('X-User-ID')
@@ -21,9 +34,13 @@ def check_auth():
         session['user_id'] = user_id
         session['role'] = user_role
         session['email'] = user_email
-        return True
+        
+        if required_role and user_role != required_role:
+            return jsonify({'success': False, 'message': f'{required_role} 권한이 필요합니다.'}), 403
+        
+        return None
     
-    return False
+    return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
 
 def require_auth(f):
     """인증 필요 데코레이터 - 세션 또는 헤더 확인"""
