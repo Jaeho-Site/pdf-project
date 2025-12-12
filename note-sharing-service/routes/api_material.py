@@ -241,22 +241,34 @@ def get_material_thumbnails(material_id):
     if not material:
         return jsonify({'success': False, 'message': '존재하지 않는 자료입니다.'}), 404
     
+    print(f"\n[THUMBNAIL] 요청: {material_id}")
+    print(f"  - GCS 경로: {material['gcs_path']}")
+    print(f"  - 페이지 수: {material['page_count']}")
+    
     # 썸네일 GCS 경로 확인
     thumbnail_prefix = f"storage/thumbnails/{material_id}/"
     thumbnail_files = storage.list_files(thumbnail_prefix)
     
+    print(f"  - 기존 썸네일: {len(thumbnail_files)}개")
+    
     # 썸네일이 없으면 생성
     if not thumbnail_files:
-        print(f"[THUMBNAIL] {material_id} 썸네일 생성 중...")
+        print(f"[THUMBNAIL] {material_id} 썸네일 생성 시작...")
         try:
             thumbnail_files = pdf_service.convert_pdf_to_images_from_gcs(
                 material['gcs_path'], 
                 material_id,
                 storage
             )
+            print(f"[THUMBNAIL] 생성 완료: {len(thumbnail_files)}개")
         except Exception as e:
-            print(f"[ERROR] 썸네일 생성 실패: {e}")
-            return jsonify({'success': False, 'message': '썸네일 생성 실패'}), 500
+            print(f"[ERROR] 썸네일 생성 실패: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False, 
+                'message': f'썸네일 생성 실패: {str(e)}'
+            }), 500
     
     # GCS Signed URL 생성 (1시간 유효)
     thumbnail_urls = []
@@ -264,6 +276,10 @@ def get_material_thumbnails(material_id):
         signed_url = storage.get_signed_url(gcs_path, expiration=3600)
         if signed_url:
             thumbnail_urls.append(signed_url)
+        else:
+            print(f"[WARNING] Signed URL 생성 실패: {gcs_path}")
+    
+    print(f"[THUMBNAIL] 최종 반환: {len(thumbnail_urls)}개 URL\n")
     
     return jsonify({
         'success': True,

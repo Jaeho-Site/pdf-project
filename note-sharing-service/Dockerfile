@@ -6,4 +6,5 @@ RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 5000
 ENV GCS_BUCKET=note-sharing-files
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/github-sa-key.json
 CMD ["python", "app.py"]

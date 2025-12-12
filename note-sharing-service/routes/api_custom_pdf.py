@@ -83,34 +83,33 @@ def generate_custom_pdf(course_id, week):
     
     print(f"  ✅ PDF 병합 완료 ({len(pdf_bytes)} bytes)")
     
-    # GCS에 저장
-    custom_pdf_data = {
-        'student_id': user_id,
-        'course_id': course_id,
-        'week': week,
-        'title': f'{user["name"]}_나만의필기_{course["course_name"]}_week{week}.pdf',
-        'page_count': len(page_info_list),
-        'selected_pages': page_info_list
-    }
+    # custom_pdf_id 생성 (DB 추가 전 필요)
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) as count FROM custom_pdfs')
+        count = cursor.fetchone()['count']
+        custom_pdf_id = f"CP{count + 1:03d}"
     
-    custom_pdf_id = db.add_custom_pdf(custom_pdf_data)
-    
-    # GCS에 업로드
+    # GCS에 업로드 (DB 추가 전)
     gcs_path = storage.save_custom_pdf(pdf_bytes, user_id, custom_pdf_id)
     
     if not gcs_path:
         return jsonify({'success': False, 'message': '파일 저장 실패'}), 500
     
-    # DB 업데이트 (gcs_path 저장)
-    with db.get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE custom_pdfs
-            SET gcs_path = ?
-            WHERE custom_pdf_id = ?
-        ''', (gcs_path, custom_pdf_id))
-    
     print(f"  ✅ GCS 업로드 완료: {gcs_path}")
+    
+    # GCS 업로드 후 DB에 저장
+    custom_pdf_data = {
+        'student_id': user_id,
+        'course_id': course_id,
+        'week': week,
+        'title': f'{user["name"]}_나만의필기_{course["course_name"]}_week{week}.pdf',
+        'gcs_path': gcs_path,  # GCS 경로 포함
+        'page_count': len(page_info_list),
+        'selected_pages': page_info_list
+    }
+    
+    custom_pdf_id = db.add_custom_pdf(custom_pdf_data)
     
     return jsonify({
         'success': True,

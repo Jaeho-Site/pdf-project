@@ -56,3 +56,6 @@ Thumbs.db
 .env
 .env.local
 
+# Service Account Keys (보안)
+# github-sa-key.json  # Docker 빌드에 필요하므로 주석 처리
+

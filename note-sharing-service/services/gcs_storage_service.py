@@ -4,6 +4,7 @@ GCS(Google Cloud Storage) 파일 저장 서비스
 """
 import os
 from google.cloud import storage
+from google.oauth2 import service_account
 from werkzeug.utils import secure_filename
 from typing import Optional, Tuple
 from io import BytesIO
@@ -13,7 +14,17 @@ class GCSStorageService:
     
     def __init__(self, bucket_name=None):
         self.bucket_name = bucket_name or os.getenv('GCS_BUCKET', 'note-sharing-files')
-        self.client = storage.Client()
+        
+        # Service Account key file 사용 (Signed URL 생성을 위해)
+        credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS', 'github-sa-key.json')
+        if os.path.exists(credentials_path):
+            print(f"[GCS] Service Account key 사용: {credentials_path}")
+            credentials = service_account.Credentials.from_service_account_file(credentials_path)
+            self.client = storage.Client(credentials=credentials, project=credentials.project_id)
+        else:
+            print(f"[GCS] Service Account key 없음, 기본 credentials 사용")
+            self.client = storage.Client()
+        
         self.bucket = self.client.bucket(self.bucket_name)
         self.allowed_extensions = {'pdf'}
     
@@ -104,9 +115,12 @@ class GCSStorageService:
         try:
             blob = self.bucket.blob(gcs_path)
             blob.upload_from_string(image_bytes, content_type='image/jpeg')
+            print(f"    ✅ 썸네일 업로드 성공: {gcs_path}")
             return gcs_path
         except Exception as e:
-            print(f"썸네일 업로드 오류: {e}")
+            print(f"    ❌ 썸네일 업로드 오류: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def download_file(self, gcs_path: str, destination_path: str) -> bool:
