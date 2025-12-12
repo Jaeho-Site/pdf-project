@@ -165,6 +165,15 @@ def download_material(material_id):
     else:
         print(f"[DEBUG] 중복 다운로드 방지: {material_id}, user: {user_id}")
     
+    # 강의 정보 조회
+    course = db.get_course_by_id(material['course_id'])
+    course_name = course['course_name'] if course else '알 수 없음'
+    week = material['week']
+    uploader_name = material.get('uploader_name', '알 수 없음')
+    
+    # 파일명 생성: "강의명 + 주차 + 교수명 or 학생명.pdf"
+    download_filename = f"{course_name} {week}주차 {uploader_name}.pdf"
+    
     # GCS에서 임시 다운로드
     gcs_path = material['gcs_path']
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
@@ -175,7 +184,7 @@ def download_material(material_id):
                 temp_file.name,
                 mimetype='application/pdf',
                 as_attachment=True,
-                download_name=material['filename']
+                download_name=download_filename
             )
         else:
             return jsonify({'success': False, 'message': 'GCS 다운로드 실패'}), 500

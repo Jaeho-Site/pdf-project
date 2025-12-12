@@ -130,6 +130,8 @@ def get_my_custom_pdfs():
     for cp in custom_pdfs:
         course = db.get_course_by_id(cp['course_id'])
         cp['course_name'] = course['course_name'] if course else '알 수 없음'
+        # 프론트엔드 호환성을 위해 file_name 필드 추가
+        cp['file_name'] = cp.get('title', '')
     
     return jsonify({
         'success': True,
@@ -152,6 +154,14 @@ def download_custom_pdf(custom_pdf_id):
     if custom_pdf['student_id'] != user_id:
         return jsonify({'success': False, 'message': '본인의 파일만 다운로드할 수 있습니다.'}), 403
     
+    # 강의 정보 조회
+    course = db.get_course_by_id(custom_pdf['course_id'])
+    course_name = course['course_name'] if course else '알 수 없음'
+    week = custom_pdf['week']
+    
+    # 파일명 생성: "강의명+주차+나만의 자료.pdf"
+    download_filename = f"{course_name}{week}주차나만의 자료.pdf"
+    
     # GCS에서 임시 다운로드
     gcs_path = custom_pdf['gcs_path']
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
@@ -162,7 +172,7 @@ def download_custom_pdf(custom_pdf_id):
                 temp_file.name,
                 mimetype='application/pdf',
                 as_attachment=True,
-                download_name=custom_pdf['title']
+                download_name=download_filename
             )
         else:
             return jsonify({'success': False, 'message': 'GCS 다운로드 실패'}), 500

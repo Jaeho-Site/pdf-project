@@ -71,10 +71,27 @@ const WeekMaterial = () => {
       const response = await api.get(`/api/materials/${materialId}/download`, {
         responseType: 'blob'
       });
+      // 백엔드에서 Content-Disposition 헤더로 파일명을 설정하므로
+      // Content-Disposition 헤더에서 파일명 추출 시도
+      const contentDisposition = response.headers['content-disposition'];
+      let downloadFileName = fileName;
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (fileNameMatch && fileNameMatch[1]) {
+          downloadFileName = fileNameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      // .pdf 확장자 보장
+      if (!downloadFileName.endsWith('.pdf')) {
+        downloadFileName += '.pdf';
+      }
+      
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', fileName);
+      link.setAttribute('download', downloadFileName);
       document.body.appendChild(link);
       link.click();
       link.remove();

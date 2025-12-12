@@ -86,6 +86,12 @@ def get_week_materials(course_id, week):
         professor_materials = [m for m in materials if m['type'] == 'professor']
         student_materials = [m for m in materials if m['type'] == 'student']
         
+        # 프론트엔드 호환성을 위해 file_name 필드 추가
+        for m in professor_materials:
+            m['file_name'] = m.get('filename', '')
+        for m in student_materials:
+            m['file_name'] = m.get('filename', '')
+        
         # 학생 자료는 마감일이 지나지 않았으면 숨김 (본인 자료는 항상 표시)
         if role == 'student' and not can_view:
             user_id = session.get('user_id')
