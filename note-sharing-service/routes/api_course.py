@@ -9,18 +9,15 @@ from utils.auth_middleware import check_auth
 api_course_bp = Blueprint('api_course', __name__)
 db = DatabaseService()
 
-def require_login():
-    """로그인 확인 - 세션 또는 헤더"""
-    return check_auth()
-
 @api_course_bp.route('', methods=['GET'])
 def get_courses():
     """강의 목록 조회"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
     
-    user_id = session['user_id']
-    role = session['role']
+    user_id = request.headers.get('X-User-ID')
+    role = request.headers.get('X-User-Role')
     
     if role == 'professor':
         courses = db.get_courses_by_professor(user_id)
@@ -35,8 +32,9 @@ def get_courses():
 @api_course_bp.route('/<course_id>', methods=['GET'])
 def get_course_detail(course_id):
     """강의 상세 조회"""
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth()
+    if auth_result:
+        return auth_result
     
     course = db.get_course_by_id(course_id)
     
@@ -68,8 +66,9 @@ def get_course_detail(course_id):
 def get_week_materials(course_id, week):
     """주차별 자료 조회"""
     try:
-        if not require_login():
-            return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+        auth_result = check_auth()
+        if auth_result:
+            return auth_result
         
         course = db.get_course_by_id(course_id)
         
@@ -77,7 +76,7 @@ def get_week_materials(course_id, week):
             return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
         
         # 학생인 경우 마감일 체크 (열람 가능 여부)
-        role = session.get('role')
+        role = request.headers.get('X-User-Role')
         can_view = True
         if role == 'student':
             can_view = db.can_view_materials(course_id, week)
@@ -142,14 +141,12 @@ def create_course():
     if request.method == 'OPTIONS':
         return '', 200
     
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
-    
-    if session.get('role') != 'professor':
-        return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
+    auth_result = check_auth(required_role='professor')
+    if auth_result:
+        return auth_result
     
     data = request.get_json()
-    professor_id = session['user_id']
+    professor_id = request.headers.get('X-User-ID')
     professor = db.get_user_by_id(professor_id)
     
     course = {
@@ -239,24 +236,24 @@ def create_invitation(course_id):
     if request.method == 'OPTIONS':
         return '', 200
     
-    if not require_login():
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'}), 401
+    auth_result = check_auth(required_role='professor')
+    if auth_result:
+        return auth_result
     
-    if session.get('role') != 'professor':
-        return jsonify({'success': False, 'message': '교수만 접근할 수 있습니다.'}), 403
+    user_id = request.headers.get('X-User-ID')
     
     # 강의 확인
     course = db.get_course_by_id(course_id)
     if not course:
         return jsonify({'success': False, 'message': '존재하지 않는 강의입니다.'}), 404
     
-    if course['professor_id'] != session['user_id']:
+    if course['professor_id'] != user_id:
         return jsonify({'success': False, 'message': '본인의 강의만 접근할 수 있습니다.'}), 403
     
     data = request.get_json() or {}
     invitation_code = db.create_invitation(
         course_id=course_id,
-        created_by=session['user_id'],
+        created_by=user_id,
         expires_at=data.get('expires_at'),
         max_uses=data.get('max_uses', -1)
     )
