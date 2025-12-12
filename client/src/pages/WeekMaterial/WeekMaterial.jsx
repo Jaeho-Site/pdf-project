@@ -66,27 +66,44 @@ const WeekMaterial = () => {
     }
   };
 
-  const handleDownload = async (materialId, fileName) => {
+  // 파일명에서 특수문자 제거 및 안전한 파일명 생성
+  const sanitizeFileName = (fileName) => {
+    // 파일명에서 특수문자 제거 (한글, 영문, 숫자만 허용, 공백 제거)
+    return fileName.replace(/[^가-힣a-zA-Z0-9]/g, '').trim();
+  };
+
+  // 중복 파일명 처리
+  const getUniqueFileName = (baseFileName) => {
+    const sanitized = sanitizeFileName(baseFileName);
+    let fileName = sanitized.endsWith('.pdf') ? sanitized : `${sanitized}.pdf`;
+    let counter = 1;
+    
+    // 다운로드 폴더에 같은 이름의 파일이 있는지 확인 (localStorage 사용)
+    const downloadHistory = JSON.parse(localStorage.getItem('downloadHistory') || '[]');
+    
+    while (downloadHistory.some(item => item.fileName === fileName)) {
+      const nameWithoutExt = sanitized.replace(/\.pdf$/i, '');
+      fileName = `${nameWithoutExt}(${counter}).pdf`;
+      counter++;
+    }
+    
+    return fileName;
+  };
+
+  const handleDownload = async (materialId, material) => {
     try {
       const response = await api.get(`/api/materials/${materialId}/download`, {
         responseType: 'blob'
       });
-      // 백엔드에서 Content-Disposition 헤더로 파일명을 설정하므로
-      // Content-Disposition 헤더에서 파일명 추출 시도
-      const contentDisposition = response.headers['content-disposition'];
-      let downloadFileName = fileName;
       
-      if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (fileNameMatch && fileNameMatch[1]) {
-          downloadFileName = fileNameMatch[1].replace(/['"]/g, '');
-        }
-      }
+      // 파일명 생성: "강의명+주차+학생명.pdf" (공백 없이)
+      const courseName = course?.course_name || '알 수 없음';
+      const materialWeek = material?.week || parseInt(week) || 0;
+      const uploaderName = material?.uploader_name || '알 수 없음';
       
-      // .pdf 확장자 보장
-      if (!downloadFileName.endsWith('.pdf')) {
-        downloadFileName += '.pdf';
-      }
+      // 파일명 생성 (공백 없이, 특수문자 제거)
+      const baseFileName = `${sanitizeFileName(courseName)}${materialWeek}주차${sanitizeFileName(uploaderName)}`;
+      const downloadFileName = getUniqueFileName(baseFileName);
       
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
@@ -96,6 +113,18 @@ const WeekMaterial = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      
+      // 다운로드 기록 저장
+      const downloadHistory = JSON.parse(localStorage.getItem('downloadHistory') || '[]');
+      downloadHistory.unshift({
+        fileName: downloadFileName,
+        timestamp: new Date().toISOString(),
+        size: response.data.size
+      });
+      // 최근 50개만 저장
+      localStorage.setItem('downloadHistory', JSON.stringify(downloadHistory.slice(0, 50)));
+      
+      showToast('다운로드 완료!', 'success');
     } catch (error) {
       showToast('다운로드 실패', 'danger');
     }
@@ -317,7 +346,7 @@ const WeekMaterial = () => {
                   </button>
                   <button
                     className="btn btn-primary"
-                    onClick={() => handleDownload(material.material_id, material.file_name)}
+                    onClick={() => handleDownload(material.material_id, material)}
                   >
                     다운로드
                   </button>
@@ -396,7 +425,7 @@ const WeekMaterial = () => {
                     </button>
                     <button
                       className="btn btn-primary"
-                      onClick={() => handleDownload(material.material_id, material.file_name)}
+                      onClick={() => handleDownload(material.material_id, material)}
                     >
                       다운로드
                     </button>
